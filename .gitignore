@@ -1,0 +1,7 @@
+__pycache__/
+venv/
+*.db
+*.log
+*_key.txt
+settings.json
+
