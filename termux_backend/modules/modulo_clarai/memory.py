@@ -100,7 +100,8 @@ def process_memory_command(cmd_str):
             return {"action":"del","id":int(cmd_str.split(":",1)[1])}
         if cmd_str.startswith("rew:"):
             mid = int(re.search(r"rew:\s*(\d+)",cmd_str).group(1))
-            summ = re.search(r"Mem:\s*([^C]+)",cmd_str)
+            summ = re.search(r"Mem:\s*(.*?)\s+Cat:", cmd_str)
+      #      summ = re.search(r"Mem:\s*([^C]+)",cmd_str)
             cat  = re.search(r"Cat:\s*(\w+)",cmd_str)
             rel  = re.search(r"Relevancia:\s*([\d\.]+)",cmd_str)
             return {

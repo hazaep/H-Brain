@@ -1,47 +1,42 @@
+# test_clarai_flow.py
+
 import os
 import json
 from termux_backend.modules.modulo_clarai import ai_api, history, memory
 
-username = "ClaraiDebugTest"
-conv_id = 996
+username = "ClaraiTest"
+conv_id = 99  # ID de prueba
 
 def test_send_and_memory():
     # Paso 1: Enviar mensaje inicial
-    response = ai_api.send_message(username, conv_id, "Hola Clarai, ests es una prueba de tu memoria dinamica, porfavor colabora usando tus comandos tambien.")
+    response = ai_api.send_message(username, conv_id, "add: Mem: Usuario inicia prueba de memoria dinámica, depuracion prueba y error Cat: Clarai Relevancia: 8.5")
     assert isinstance(response, str)
     print("[✓] Mensaje inicial enviado.")
 
-    # Paso 2: Agregar memoria
-    cmd = 'add: Mem: Clarai ayuda con memoria de IA Cat: Clarai Relevancia: 8.1'
-    response = ai_api.send_message(username, conv_id, cmd)
+    # Paso 2: Agregar una memoria adicional para asegurar prueba
+    response = ai_api.send_message(username, conv_id, "add: Mem: Clarai ayuda con memoria de IA, ayuda enviando comandos  Cat: Clarai Relevancia: 9.5")
     print("[✓] Memoria agregada.")
 
-    # Paso 3: Buscar memoria agregada
-    response = ai_api.send_message(username, conv_id, "busca modular con los comandos")
-    assert "modular" in response or "Memoria" in response
+    # Paso 3: Buscar memorias relacionadas con la palabra clave
+    response = ai_api.send_message(username, conv_id, "find: dinámica")
+    assert "dinámica" in response or "Memoria" in response
     print("[✓] Búsqueda de memoria exitosa.")
 
-    # Paso 4: Reescribir memoria
-    conn_hist = history.init_history_db()
-    conn_mem = memory.init_memory_db()
-    user_id = history.get_or_create_user(conn_hist, username)
-    mems = memory.search_memories(conn_mem, user_id, "modular")
-    assert mems, "No se encontró memoria para reescribir"
-    mem_id = mems[-1][0]  # Tomamos la última (más reciente)
-    rew_cmd = f"reesctibre con un comando  {mem_id} Mem: Clarai fue actualizada Cat: Clarai Relevancia: 9.3"
+    # Paso 4: Reescribir una memoria que contiene "dinámica"
+    mem_conn = memory.init_memory_db()
+    user_id = history.get_or_create_user(history.init_history_db(), username)
+    mems = memory.search_memories(mem_conn, user_id, "dinámica")
+    assert mems, f"No se encontró memoria con 'dinámica' para user_id={user_id}"
+
+    mem_id = mems[0][0]
+    rew_cmd = f"rew: {mem_id} Mem: Clarai fue actualizada, usa rew y del Cat: Clarai Relevancia: 9.3"
     response = ai_api.send_message(username, conv_id, rew_cmd)
     print("[✓] Reescritura exitosa.")
 
-# Paso 5: Confirmar cambios (debug temporal)
-    print(f"[DEBUG] Se intentó actualizar la memoria con ID: {mem_id}")
-    fila = memory.get_memory_by_id(mem_conn, mem_id)
-    print("[DEBUG] Contenido después de rew:", fila)
-
-    # Paso 5: Confirmar contenido directamente por ID
-    cur = conn_mem.execute("SELECT summary FROM memories WHERE id=? AND user_id=?", (mem_id, user_id))
-    row = cur.fetchone()
-    assert row is not None, "No se encontró la memoria reescrita"
-    assert "actualizada" in row[0], f"Memoria con ID {mem_id} no fue actualizada correctamente"
+    # Paso 5: Confirmar cambios con impresión de depuración
+    row = memory.get_memory_by_id(mem_conn, mem_id)
+    print(f"[DEBUG] Contenido después de rew: {row}")
+    assert "actualizada" in row[1], f"Memoria con ID {mem_id} no fue actualizada correctamente"
     print("[✓] Validación final exitosa.")
 
 if __name__ == "__main__":
