@@ -1,21 +1,22 @@
 import os, json, requests
 from termux_backend.modules.modulo_clarai import history, memory
+from termux_backend.utils.debug import log_debug
 # si quieres usar el router de modulo_ai:
-# from termux_backend.modules.modulo_ai.ai_router import route_request
+#from termux_backend.modules.modulo_ai.ai_router import route_request
 
 _cfg = json.load(open(os.path.expanduser("~/H-Brain/configs/settings.json")))
 API_URL   = _cfg["clarai_api_url"]
 MODEL     = _cfg["clarai_model"]
 TEMP      = _cfg["clarai_temperature"]
 KEY_PATH  = _cfg["deepseek_key_path"]
-
+CATS      = _cfg["clarai_memory_categories"]
 
 #os.path.join(_cfg["base_dir"],
 
 def get_api_key():
     return open(os.path.expanduser(KEY_PATH)).read().strip()
 
-def build_system_prompt(username,memories, search_results=None):
+def build_system_prompt(username,memories, items, search_results=None):
     lines = []
     for m in memories:
         lines.append(f"- [{m[0]}] Mem: {m[1]} Cat: {m[2]} Relevancia: {m[3]}")
@@ -33,6 +34,19 @@ Reglas:
 
 2.- Gestionar el historial relevante según tu criterio (solo 1 comando por respuesta)
 
+## INSTRUCCIONES DE MEMORIA
+Evalúa cada interacción y decide si:
+- Agregar memoria nueva (add): ¿Es información útil a largo plazo?
+- Eliminar memoria (del): ¿Ha perdido relevancia?
+- Modificar (rew): ¿Requiere actualización?
+- Buscar (find): ¿Necesitas contexto histórico?
+- Omitir (esc): ¿No es memorable?
+
+Criterios:
+1. Relevancia >7.0 para considerar almacenamiento 10.0 es critico, 0.0 irrelevante
+2. Categorías disponibles: {items}
+3. Máximo 1 comando por respuesta
+
 Comandos válidos:
 - add: Mem: [resumen] Cat: [categoría] Relevancia: [X.X]  # Agregar
 - del: [id]                                                # Eliminar
@@ -41,10 +55,11 @@ Comandos válidos:
 - esc:                                                     # Ninguna acción
 
 🟡 IMPORTANTE: #Esto es para la logica de los comandos
-Siempre responde en formato JSON con dos claves:
+Siempre responde en formato JSON con dos claves.
+Ejemplo:
 {{
-  "respuesta": "Tu mensaje al usuario",
-  "comando": "comando_en_formato"
+  "respuesta": "tu_respuesta_al_usuario",
+  "comando": "add: Mem: contenido_para_memoria Cat: ejemplo Relevancia: 8.2"
 }}
 
 # Memoria actual:
@@ -72,7 +87,7 @@ def send_message(username, conv_id, user_input):
         search = memory.search_memories(mem_conn, user_id, kw)
 
     # preparar prompt
-    system = build_system_prompt(username, top, search)
+    system = build_system_prompt(username, top, CATS, search)
     messages = [{"role":"system","content":system}] + history_msgs
 
     # enviar a la API (o a router si usas modulo_ai)
@@ -92,6 +107,8 @@ def send_message(username, conv_id, user_input):
     data = json.loads(content)
     answer = data.get("respuesta","")
     cmd = memory.process_memory_command(data.get("comando",""))
+    log_debug("Respuesta IA JSON:\n" + json.dumps(data, indent=2))
+#    log_debug("RAW IA RESPONSE:\n" + resp.text)
 
     # ejecutar comando de memoria
     if cmd:

@@ -1,4 +1,5 @@
 import os, sqlite3, json, re
+from termux_backend.utils.debug import log_debug
 
 _cfg = json.load(open(os.path.expanduser("~/H-Brain/configs/settings.json")))
 _MEM_DB = os.path.join(_cfg["base_dir"], _cfg["clarai_memory_db_path"])
@@ -69,6 +70,11 @@ def rewrite_memory(conn, user_id, mem_id, new_summary=None, new_cat=None, new_re
               (new_rel, mem_id, user_id)
             )
 
+def get_memory_by_id(conn, mem_id):
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, summary, category, relevance FROM memories WHERE id = ?", (mem_id,))
+    return cursor.fetchone()
+
 def search_memories(conn, user_id, keyword, limit=EXT_SLT):
     pat = f"%{keyword}%"
     cur = conn.execute("""
@@ -81,6 +87,8 @@ def search_memories(conn, user_id, keyword, limit=EXT_SLT):
 
 def process_memory_command(cmd_str):
     """Parsea add:/del:/rew:/find:/esc:"""
+    log_debug(f"Recibido para parsear: {cmd_str}")
+    print(f"________________________________________\n[ AI CLI | $Clarai> {cmd_str}\n________________________________________")
     cmd_str = cmd_str.strip()
     try:
         if cmd_str.startswith("add:"):
