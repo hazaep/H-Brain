@@ -88,7 +88,6 @@ def search_memories(conn, user_id, keyword, limit=EXT_SLT):
 def process_memory_command(cmd_str):
     """Parsea add:/del:/rew:/find:/esc:"""
     log_debug(f"Recibido para parsear: {cmd_str}")
-    print(f"________________________________________\n[ AI CLI | $Clarai> {cmd_str}\n________________________________________")
     cmd_str = cmd_str.strip()
     try:
         if cmd_str.startswith("add:"):
