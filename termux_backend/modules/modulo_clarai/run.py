@@ -13,7 +13,7 @@ def main():
     print("___[IA-CLI]_______________________________________")
     for c in raw_comandos:
         print(f" [ &Clarai> {c}]")
-    print("______________________________________[CIAMD]: [✓]\n\n")
+    print(f"_________________________________[{user} CLI]: [✓]\n\n")
 
 
 if __name__ == "__main__":

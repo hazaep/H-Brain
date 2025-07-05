@@ -5,41 +5,67 @@ from termux_backend.modules.modulo_tools.utils import get_db_path
 
 DB_PATH = get_db_path()
 
+# ------------------------------
+# Mapeo de módulo a criptomoneda
+# ------------------------------
+MODULE_CRYPTO = {
+    "":        "NRN",       # módulo genérico
+    "symcontext": "SYMCOIN",
+    "bitacora":   "MOODBIT",
+    "modulo_ai":  "AITHOUGHT",
+    "clarai":     "CLARIUM",
+    # 'SYNAP' para herramienta
+}
+
+NFT_CRYPTO = "neuroNFT"  # para mint_nft
 
 def mint_token(module, action, amount=1, input_id=None, metadata={}):
-    conn = sqlite3.connect(DB_PATH)
+    from datetime import datetime
+    crypto = MODULE_CRYPTO.get(module, "SYNAP")
+    ts     = datetime.now().isoformat()
+
+    conn   = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
-        INSERT INTO neuro_tokens (module, action, amount, input_id, metadata, timestamp)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO neuro_tokens
+            (module, action, amount, input_id, metadata, timestamp, crypto)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
     """, (
         module,
         action,
         amount,
         input_id,
         json.dumps(metadata),
-        datetime.now().isoformat()
+        ts,
+        crypto
     ))
     conn.commit()
     conn.close()
-    print(f"🪙 Token minado: {amount} | módulo: {module}, acción: {action}")
 
+    print(f"🪙 Token minado: {amount} · módulo={module} · acción={action} · crypto={crypto}")
 
 def mint_nft(input_id, title=None, metadata={}):
-    conn = sqlite3.connect(DB_PATH)
+    from datetime import datetime
+    ts     = datetime.now().isoformat()
+    crypto = NFT_CRYPTO
+
+    conn   = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
-        INSERT INTO neuro_nfts (input_id, title, metadata, timestamp)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO neuro_nfts
+            (input_id, title, metadata, timestamp, crypto)
+        VALUES (?, ?, ?, ?, ?)
     """, (
         input_id,
         title,
         json.dumps(metadata),
-        datetime.now().isoformat()
+        ts,
+        crypto
     ))
     conn.commit()
     conn.close()
-    print(f"🖼️ NFT creado para input #{input_id} - {title or 'Sin título'}")
+
+    print(f"🖼️ NFT creado  · input_id={input_id} · title='{title or ''}' · crypto={crypto}")
 
 
 def get_balance(module=None):

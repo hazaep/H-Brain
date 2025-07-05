@@ -23,7 +23,7 @@ def init_memory_db():
         """)
     return conn
 
-def load_top_memories(conn, user_id, limit=5):
+def load_top_memories(conn, user_id, limit=MAX):
     cur = conn.execute(
       "SELECT id,summary,category,relevance FROM memories WHERE user_id=? ORDER BY relevance DESC LIMIT ?",
       (user_id, limit)

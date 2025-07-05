@@ -22,10 +22,14 @@ def build_system_prompt(username, memories, items, search_results=None):
     if search_results:
         for m in search_results:
             lines.append(f"- [F:{m[0]}] Mem: {m[1]} Cat: {m[2]} Relevancia: {m[3]}")
+    print("\n\n_____[CLARIUM]_____________________________")
+    for l in lines:
+        print(l)
+    print("\n___________________________________________")
     return f"""Eres Clarai, asistente de IA creada por Hazael. Usuario: {username}
 
 Especialización actual:
-1.- Exploración teórica/IA
+1.- Exploración teórica
 
 Reglas:
 - Ajustar estilo según historial
@@ -50,7 +54,7 @@ Comandos válidos (uno o varios):
 - find: [palabras clave]
 - esc:
 
-🟡 IMPORTANTE: Siempre responde en formato JSON:
+🟡 IMPORTANTE: Siempre responde en formato JSON[RELEVANCIA: 10.0]:
 {{
   "respuesta": "texto de respuesta al usuario",
   "comando": [ "comando1", "comando2", ... ]
@@ -80,7 +84,8 @@ def send_message(username, conv_id, user_input):
     # Preparar prompt
     system = build_system_prompt(username, top, CATS, search)
     messages = [{"role":"system","content":system}] + history_msgs
-
+#    print(system)
+    log_debug(system)
     # Enviar a la API (o router si usas uno)
     payload = {'model': MODEL, 'messages': messages, 'temperature': TEMP, 'max_tokens': MAX_TOK}
     headers = {'Authorization': f'Bearer {get_api_key()}', 'Content-Type': 'application/json'}
