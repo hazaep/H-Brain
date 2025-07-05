@@ -1,34 +1,39 @@
 import sqlite3
-from termux_backend.modules.modulo_tools.utils import get_db_path
+import os
+import json
 
-DB_PATH = get_db_path()
+SETTINGS_PATH = os.path.expanduser("~/H-Brain/configs/settings.json")
+with open(SETTINGS_PATH, "r") as f:
+    settings = json.load(f)
 
-def crear_tablas_neurobank():
+DB_PATH = os.path.expanduser("~/H-Brain/" + settings.get("neurobank_db_path", "termux_backend/database/naurobank_vault.db"))
+
+def create_tables():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
-    # Tabla para tokens
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS neuro_tokens (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT DEFAULT CURRENT_TIMESTAMP,
-            module TEXT,
-            action TEXT,
-            amount INTEGER,
-            input_id INTEGER,
-            metadata TEXT
-        );
+    CREATE TABLE IF NOT EXISTS neuro_tokens (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        module TEXT,
+        action TEXT,
+        amount INTEGER,
+        input_id INTEGER,
+        crypto TEXT,
+        metadata TEXT,
+        timestamp TEXT
+    )
     """)
 
-    # Tabla para NFTs
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS neuro_nfts (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT DEFAULT CURRENT_TIMESTAMP,
-            input_id INTEGER,
-            title TEXT,
-            metadata TEXT
-        );
+    CREATE TABLE IF NOT EXISTS neuro_nfts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        input_id INTEGER,
+        title TEXT,
+        crypto TEXT,
+        metadata TEXT,
+        timestamp TEXT
+    )
     """)
 
     conn.commit()
@@ -36,4 +41,4 @@ def crear_tablas_neurobank():
     print("✅ Tablas de NeuroBank creadas o actualizadas.")
 
 if __name__ == "__main__":
-    crear_tablas_neurobank()
+    create_tables()
