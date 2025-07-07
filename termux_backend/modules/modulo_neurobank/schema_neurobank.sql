@@ -13,5 +13,6 @@ CREATE TABLE IF NOT EXISTS neuro_nfts (
     input_id INTEGER NOT NULL,
     title TEXT,
     metadata TEXT,
-    timestamp TEXT DEFAULT CURRENT_TIMESTAMP
+    timestamp TEXT DEFAULT CURRENT_TIMESTAMP,
+    module TEXT NOT NULL
 );

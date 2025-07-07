@@ -31,11 +31,11 @@ REGISTERED_CRYPTOS = {
 def mint_token(module, action, amount=1, input_id=None, crypto="NRN", metadata={}):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-
+    metadata_str = json.dumps(metadata)
     cursor.execute("""
         INSERT INTO neuro_tokens (module, action, amount, input_id, crypto, metadata, timestamp)
         VALUES (?, ?, ?, ?, ?, ?, ?)
-    """, (module, action, amount, input_id, crypto, json.dumps(metadata), datetime.now().isoformat()))
+    """, (module, action, amount, input_id, crypto, f"{metadata_str}", datetime.now().isoformat()))
 
     conn.commit()
     conn.close()
@@ -44,11 +44,11 @@ def mint_token(module, action, amount=1, input_id=None, crypto="NRN", metadata={
 def mint_nft(input_id, title=None, crypto="neuroNFT", metadata={}, module="Neurobank"):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-
+    metadata_str = json.dumps(metadata)
     cursor.execute("""
         INSERT INTO neuro_nfts (input_id, title, crypto, metadata, timestamp, module)
         VALUES (?, ?, ?, ?, ?, ?)
-    """, (input_id, title, crypto, json.dumps(metadata), datetime.now().isoformat(), module))
+    """, (input_id, title, crypto, f"{metadata_str}", datetime.now().isoformat(), module))
 
     conn.commit()
     conn.close()
