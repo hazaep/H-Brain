@@ -41,18 +41,18 @@ def mint_token(module, action, amount=1, input_id=None, crypto="NRN", metadata={
     conn.close()
     print(f"🪙 Token minado: {amount} x [{crypto}] | módulo: {module}, acción: {action}")
 
-def mint_nft(input_id, title=None, crypto="neuroNFT", metadata={}):
+def mint_nft(input_id, title=None, crypto="neuroNFT", metadata={}, module="Neurobank"):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
     cursor.execute("""
-        INSERT INTO neuro_nfts (input_id, title, crypto, metadata, timestamp)
-        VALUES (?, ?, ?, ?, ?)
-    """, (input_id, title, crypto, json.dumps(metadata), datetime.now().isoformat()))
+        INSERT INTO neuro_nfts (input_id, title, crypto, metadata, timestamp, module)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (input_id, title, crypto, json.dumps(metadata), datetime.now().isoformat(), module))
 
     conn.commit()
     conn.close()
-    print(f"🖼️ NFT creado para input #{input_id} - {title or 'Sin título'}")
+    print(f"🖼️ NFT creado para input {input_id} - {module} - {title or 'Sin título'}")
 
 def get_balance(module=None, crypto=None):
     conn = sqlite3.connect(DB_PATH)
@@ -108,7 +108,7 @@ def list_nfts():
     cursor = conn.cursor()
 
     cursor.execute("""
-        SELECT id, input_id, title, crypto, metadata, timestamp
+        SELECT id, input_id, title, crypto, metadata, timestamp, module
         FROM neuro_nfts
         ORDER BY id DESC
     """)
@@ -118,6 +118,7 @@ def list_nfts():
     for row in rows:
         print(f"💠 NFT ID: {row[0]} | Título: {row[2]}")
         print(f"🔗 input_id: {row[1]}")
+        print(f"⚙️ Modulo: {row[6]}")
         print(f"⏱️ {row[5]}")
         print(f"💎 [{row[3]}]")
         print(f"📎 {row[4]}\n")

@@ -4,8 +4,12 @@ import argparse
 import json
 from termux_backend.modules.modulo_neurobank import neurobank
 from termux_backend.modules.modulo_neurobank.utils import get_neurobank_db_path
+from termux_backend.modules.modulo_neurobank.report_utils import (
+    export_tokens_summary_csv,
+    export_nfts_markdown
+)
 
-# Criptos registradas en el sistema
+# Criptos registradas en el sistema pendiente setting.json
 REGISTERED_CRYPTOS = {
     "NRN": "Neuron – Token principal del sistema",
     "SYNAP": "Synaptium – Token por uso de herramientas",
@@ -62,6 +66,14 @@ def main():
     # 🔹 Ver NFTs
     subparsers.add_parser("list_nfts", help="Listar NFTs creados")
 
+    # 📊 Reporte: tokens → CSV
+    parser_report_tokens = subparsers.add_parser("report_tokens", help="Exportar resumen de tokens por módulo y acción a CSV")
+    parser_report_tokens.add_argument("--out", help="Ruta de salida del archivo CSV", default="tokens_report.csv")
+
+    # 🖼️ Reporte: NFTs → Markdown
+    parser_report_nfts = subparsers.add_parser("report_nfts", help="Exportar lista de NFTs a Markdown")
+    parser_report_nfts.add_argument("--out", help="Ruta de salida del archivo Markdown", default="nft_report.md")
+
     # 🔹 Modo interactivo
     subparsers.add_parser("interactive", help="Modo CLI interactivo")
 
@@ -114,35 +126,48 @@ def main():
     elif args.comando == "list_nfts":
         neurobank.list_nfts()
 
-#    elif args.comando == "interactive":
-#        print("🔁 Entrando en modo interactivo. Escribe 'exit' para salir.\n")
-#        while True:
-#            try:
-#                comando = input("neurobank> ").strip()
-#                if comando.lower() in ["exit", "quit"]:
-#                    break
-#                args_list = comando.split()
-#                if not args_list:
-#                    continue
-#                parsed_args = parser.parse_args(args_list)
-#                args = parsed_args
-#                main()  # llama recursivamente para manejar el comando
-#            except Exception as e:
-#                print(f"❌ Error: {e}")
+    elif args.comando == "report_tokens":
+        export_tokens_summary_csv(args.out)
+
+    elif args.comando == "report_nfts":
+        export_nfts_markdown(args.out)
 
     elif args.comando == "interactive":
         print("=== 💠 MODO INTERACTIVO – NEUROBANK ===")
 
         while True:
             print("\nElige una opción:")
-            print("1. 🪙 Minar token")
-            print("2. 🖼️ Crear NFT")
-            print("3. 📊 Ver balance")
-            print("4. 📜 Ver historial de tokens")
-            print("5. 🧾 Ver historial de NFTs")
-            print("6. 🚪 Salir")
+ #           print("1. 🪙 Minar token")
+  #          print("2. 🖼️ Crear NFT")
+   #         print("3. 📊 Ver balance")
+    #        print("4. 📜 Ver historial de tokens")
+     #       print("5. 🧾 Ver historial de NFTs")
+      #      print("6. 🚪 Salir")
 
-            opcion = input(">> ").strip()
+       #     opcion = input(">> ").strip()
+
+            opciones = {
+        "1": ("Ver balance total", lambda: print(f"📊 Balance total: {neurobank.get_balance()}")),
+        "2": ("Listar tokens", neurobank.list_tokens),
+        "3": ("Listar NFTs", neurobank.list_nfts),
+        "4": ("Minar token", lambda: neurobank.mint_token(
+            input("🔹 Módulo: "), input("🔸 Acción: "),
+            int(input("💰 Cantidad: ")), None,
+            json.loads(input("📎 Metadata (JSON): ") or "{}")
+        )),
+        "5": ("Crear NFT", lambda: neurobank.mint_nft(
+            int(input("🔗 ID del input relacionado: ")),
+            input("🎨 Título: "),
+            input("📎 Metadata (JSON): ")
+        )),
+        "6": ("📤 Exportar resumen de tokens a CSV", lambda: export_tokens_summary_csv(
+            input("📁 Ruta de salida (por defecto: tokens_report.csv): ") or "tokens_report.csv"
+        )),
+        "7": ("📝 Exportar NFTs a Markdown", lambda: export_nfts_markdown(
+            input("📁 Ruta de salida (por defecto: nft_report.md): ") or "nft_report.md"
+        )),
+        "0": ("Salir", lambda: exit())
+    }
 
             if opcion == "1":
                 print("\n🪙 Minar token:")
