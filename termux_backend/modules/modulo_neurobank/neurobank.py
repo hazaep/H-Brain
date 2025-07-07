@@ -1,132 +1,174 @@
 import sqlite3
 import json
 from datetime import datetime
-from termux_backend.modules.modulo_tools.utils import get_db_path
+import os
+import sys
+import json
+from termux_backend.modules.modulo_neurobank.utils import get_neurobank_db_path
+DB_PATH = get_neurobank_db_path()
 
-DB_PATH = get_db_path()
+# Cargar ruta desde settings.json
+#SETTINGS_PATH = os.path.expanduser("~/H-Brain/configs/settings.json")
+#with open(SETTINGS_PATH, "r") as f:
+#    settings = json.load(f)
 
-# ------------------------------
-# Mapeo de módulo a criptomoneda
-# ------------------------------
-MODULE_CRYPTO = {
-    "":        "NRN",       # módulo genérico
-    "symcontext": "SYMCOIN",
-    "bitacora":   "MOODBIT",
-    "modulo_ai":  "AITHOUGHT",
-    "clarai":     "CLARIUM",
-    # 'SYNAP' para herramienta
+#DB_PATH = os.path.expanduser(os.path.join(
+#    "~/H-Brain", settings.get("neurobank_db_path", "termux_backend/database/naurobank_vault.db")
+#))
+
+# Criptos registradas en el sistema
+REGISTERED_CRYPTOS = {
+    "NRN": "Neuron – Token principal del sistema",
+    "SYNAP": "Synaptium – Token por uso de herramientas",
+    "SYMCOIN": "Symbolic Coin – Módulo SymContext",
+    "MOODBIT": "MoodBit – Módulo Bitácora",
+    "AITHOUGHT": "AI Thought Token – Módulo IA",
+    "Clarium": "Clarium – Módulo Clarai",
+    "neuroNFT": "NeuroGem – NFT de introspección"
 }
 
-NFT_CRYPTO = "neuroNFT"  # para mint_nft
 
-def mint_token(module, action, amount=1, input_id=None, metadata={}):
-    from datetime import datetime
-    crypto = MODULE_CRYPTO.get(module, "SYNAP")
-    ts     = datetime.now().isoformat()
-
-    conn   = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    cursor.execute("""
-        INSERT INTO neuro_tokens
-            (module, action, amount, input_id, metadata, timestamp, crypto)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    """, (
-        module,
-        action,
-        amount,
-        input_id,
-        json.dumps(metadata),
-        ts,
-        crypto
-    ))
-    conn.commit()
-    conn.close()
-
-    print(f"🪙 Token minado: {amount} · módulo={module} · acción={action} · crypto={crypto}")
-
-def mint_nft(input_id, title=None, metadata={}):
-    from datetime import datetime
-    ts     = datetime.now().isoformat()
-    crypto = NFT_CRYPTO
-
-    conn   = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    cursor.execute("""
-        INSERT INTO neuro_nfts
-            (input_id, title, metadata, timestamp, crypto)
-        VALUES (?, ?, ?, ?, ?)
-    """, (
-        input_id,
-        title,
-        json.dumps(metadata),
-        ts,
-        crypto
-    ))
-    conn.commit()
-    conn.close()
-
-    print(f"🖼️ NFT creado  · input_id={input_id} · title='{title or ''}' · crypto={crypto}")
-
-
-def get_balance(module=None):
+def mint_token(module, action, amount=1, input_id=None, crypto="NRN", metadata={}):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO neuro_tokens (module, action, amount, input_id, crypto, metadata, timestamp)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    """, (module, action, amount, input_id, crypto, json.dumps(metadata), datetime.now().isoformat()))
+
+    conn.commit()
+    conn.close()
+    print(f"🪙 Token minado: {amount} x [{crypto}] | módulo: {module}, acción: {action}")
+
+def mint_nft(input_id, title=None, crypto="neuroNFT", metadata={}):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO neuro_nfts (input_id, title, crypto, metadata, timestamp)
+        VALUES (?, ?, ?, ?, ?)
+    """, (input_id, title, crypto, json.dumps(metadata), datetime.now().isoformat()))
+
+    conn.commit()
+    conn.close()
+    print(f"🖼️ NFT creado para input #{input_id} - {title or 'Sin título'}")
+
+def get_balance(module=None, crypto=None):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    query = "SELECT SUM(amount) FROM neuro_tokens"
+    conditions = []
+    values = []
+
     if module:
-        cursor.execute("SELECT SUM(amount) FROM neuro_tokens WHERE module = ?", (module,))
-    else:
-        cursor.execute("SELECT SUM(amount) FROM neuro_tokens")
+        conditions.append("module = ?")
+        values.append(module)
+    if crypto:
+        conditions.append("crypto = ?")
+        values.append(crypto)
+
+    if conditions:
+        query += " WHERE " + " AND ".join(conditions)
+
+    cursor.execute(query, values)
     total = cursor.fetchone()[0] or 0
     conn.close()
-    print(f"📊 Balance total{' del módulo ' + module if module else ''}: {total}")
     return total
-
 
 def list_tokens(module=None):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
+
     if module:
         cursor.execute("""
-            SELECT id, module, action, amount, input_id, timestamp, metadata
-            FROM neuro_tokens WHERE module = ? ORDER BY timestamp DESC
+            SELECT id, amount, module, action, crypto, metadata, timestamp
+            FROM neuro_tokens
+            WHERE module = ?
+            ORDER BY id DESC
         """, (module,))
     else:
         cursor.execute("""
-            SELECT id, module, action, amount, input_id, timestamp, metadata
-            FROM neuro_tokens ORDER BY timestamp DESC
+            SELECT id, amount, module, action, crypto, metadata, timestamp
+            FROM neuro_tokens
+            ORDER BY id DESC
         """)
+
     rows = cursor.fetchall()
     conn.close()
 
-    if not rows:
-        print("📭 No se encontraron tokens.")
-        return
-
     for row in rows:
-        id_, module, action, amount, input_id, timestamp, metadata = row
-        print(f"🔹 ID: {id_} | {amount} x [{module}::{action}]")
-        if input_id:
-            print(f"🔗 input_id: {input_id}")
-        print(f"⏱️ {timestamp}")
-        print(f"📎 {metadata}\n")
-
+        print(f"🔹 ID: {row[0]} | {row[1]} x [{row[4]}] [{row[2]}::{row[3]}]")
+        print(f"⏱️ {row[6]}")
+        print(f"📎 {row[5]}\n")
 
 def list_nfts():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
+
     cursor.execute("""
-        SELECT id, input_id, title, timestamp, metadata
-        FROM neuro_nfts ORDER BY timestamp DESC
+        SELECT id, input_id, title, crypto, metadata, timestamp
+        FROM neuro_nfts
+        ORDER BY id DESC
     """)
     rows = cursor.fetchall()
     conn.close()
 
-    if not rows:
-        print("💨 No hay NFTs registrados.")
-        return
-
     for row in rows:
-        id_, input_id, title, timestamp, metadata = row
-        print(f"💠 NFT ID: {id_} | Título: {title}")
-        print(f"🔗 input_id: {input_id}")
-        print(f"⏱️ {timestamp}")
-        print(f"📎 {metadata}\n")
+        print(f"💠 NFT ID: {row[0]} | Título: {row[2]}")
+        print(f"🔗 input_id: {row[1]}")
+        print(f"⏱️ {row[5]}")
+        print(f"💎 [{row[3]}]")
+        print(f"📎 {row[4]}\n")
+
+def report_tokens_by_crypto():
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT crypto, COUNT(*) as count, SUM(amount) as total_amount
+        FROM neuro_tokens
+        GROUP BY crypto
+        ORDER BY total_amount DESC
+    """)
+    data = cursor.fetchall()
+    conn.close()
+
+    print("📈 Reporte por tipo de token:")
+    for crypto, count, total in data:
+        print(f"🔹 {crypto}: {count} transacciones, {total} tokens")
+
+def report_tokens_by_module():
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT module, COUNT(*) as count, SUM(amount) as total_amount
+        FROM neuro_tokens
+        GROUP BY module
+        ORDER BY total_amount DESC
+    """)
+    data = cursor.fetchall()
+    conn.close()
+
+    print("🏗️ Reporte por módulo:")
+    for module, count, total in data:
+        print(f"🔸 {module}: {count} acciones, {total} tokens")
+
+def report_nfts_by_module():
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT module, COUNT(*) as nft_count
+        FROM neuro_nfts
+        GROUP BY module
+    """)
+    data = cursor.fetchall()
+    conn.close()
+
+    print("💎 Reporte de NFTs por módulo:")
+    for module, nft_count in data:
+        print(f"🧬 {module}: {nft_count} NFTs")
+

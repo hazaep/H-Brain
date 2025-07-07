@@ -33,6 +33,7 @@ def create_tables():
         crypto TEXT,
         metadata TEXT,
         timestamp TEXT
+        module TEXT
     )
     """)
 

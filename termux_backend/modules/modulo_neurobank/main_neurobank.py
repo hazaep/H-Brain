@@ -1,61 +1,112 @@
+# termux_backend/modules/modulo_neurobank/main_neurobank.py
+
 import argparse
+import json
 from termux_backend.modules.modulo_neurobank import neurobank
+from termux_backend.modules.modulo_neurobank.utils import get_neurobank_db_path
+
+# Criptos registradas en el sistema
+REGISTERED_CRYPTOS = {
+    "NRN": "Neuron – Token principal del sistema",
+    "SYNAP": "Synaptium – Token por uso de herramientas",
+    "SYMCOIN": "Symbolic Coin – Módulo SymContext",
+    "MOODBIT": "MoodBit – Módulo Bitácora",
+    "AITHOUGHT": "AI Thought Token – Módulo IA",
+    "Clarium": "Clarium – Módulo Clarai",
+    "neuroNFT": "NeuroGem – NFT de introspección"
+}
+
+try:
+    import readline
+except ImportError:
+    readline = None
+
+def set_autocompleter(options):
+    if readline:
+        def completer(text, state):
+            matches = [opt for opt in options if opt.startswith(text)]
+            return matches[state] if state < len(matches) else None
+        readline.set_completer(completer)
+        readline.parse_and_bind("tab: complete")
 
 def main():
     parser = argparse.ArgumentParser(
-        description="💰 CLI de módulo NeuroBank – Registro de tokens y NFTs por actividad"
+        description="🧠 NeuroBank CLI - Gestiona la economía simbólica de H-Brain"
     )
     subparsers = parser.add_subparsers(dest="comando")
 
-    # Comando: balance
-    balance_parser = subparsers.add_parser("balance", help="Mostrar balance general o por módulo")
-    balance_parser.add_argument("--module", "-m", help="Filtrar por nombre de módulo")
+    # 🔹 Mint Token
+    p_mint_token = subparsers.add_parser("mint_token", help="Minar un nuevo token")
+    p_mint_token.add_argument("module", help="Nombre del módulo que genera el token")
+    p_mint_token.add_argument("action", help="Acción que genera el token")
+    p_mint_token.add_argument("--amount", type=int, default=1, help="Cantidad a minar")
+    p_mint_token.add_argument("--input_id", type=int, help="ID del input (opcional)")
+    p_mint_token.add_argument("--crypto", default="NRN", help="Cripto asociada")
+    p_mint_token.add_argument("--meta", help="Metadatos en formato JSON")
 
-    # Comando: mint_token
-    mint_token_parser = subparsers.add_parser("mint_token", help="Minar token")
-    mint_token_parser.add_argument("module", help="Nombre del módulo")
-    mint_token_parser.add_argument("action", help="Nombre de la acción")
-    mint_token_parser.add_argument("--amount", "-a", type=int, default=1, help="Cantidad (default 1)")
-    mint_token_parser.add_argument("--input_id", "-i", type=int, help="ID del input relacionado (opcional)")
-    mint_token_parser.add_argument("--meta", help="Metadata en JSON (opcional)", default="{}")
+    # 🔹 Mint NFT
+    p_mint_nft = subparsers.add_parser("mint_nft", help="Crear un nuevo NFT")
+    p_mint_nft.add_argument("input_id", type=int, help="ID del input relacionado")
+    p_mint_nft.add_argument("--title", help="Título opcional para el NFT")
+    p_mint_nft.add_argument("--crypto", default="neuroNFT", help="Cripto asociada")
+    p_mint_nft.add_argument("--meta", help="Metadatos en formato JSON")
 
-    # Comando: mint_nft
-    mint_nft_parser = subparsers.add_parser("mint_nft", help="Minar NFT")
-    mint_nft_parser.add_argument("input_id", type=int, help="ID del input relacionado")
-    mint_nft_parser.add_argument("--title", help="Título del NFT")
-    mint_nft_parser.add_argument("--meta", help="Metadata en JSON (opcional)", default="{}")
+    # 🔹 Ver Balance
+    p_balance = subparsers.add_parser("balance", help="Ver balance total o por módulo")
+    p_balance.add_argument("--module", help="Filtrar por módulo")
 
-    # Comando: list_tokens
-    list_tokens_parser = subparsers.add_parser("list_tokens", help="Listar tokens")
-    list_tokens_parser.add_argument("--module", "-m", help="Filtrar por módulo (opcional)")
+    # 🔹 Ver tokens
+    p_tokens = subparsers.add_parser("list_tokens", help="Listar tokens minados")
+    p_tokens.add_argument("--module", help="Filtrar por módulo")
 
-    # Comando: list_nfts
-    subparsers.add_parser("list_nfts", help="Listar NFTs")
+    # 🔹 Ver NFTs
+    subparsers.add_parser("list_nfts", help="Listar NFTs creados")
+
+    # 🔹 Modo interactivo
+    subparsers.add_parser("interactive", help="Modo CLI interactivo")
 
     args = parser.parse_args()
 
-    if args.comando == "balance":
-        neurobank.get_balance(module=args.module)
+    if not args.comando:
+        parser.print_help()
+        return
 
-    elif args.comando == "mint_token":
-        import json
-        metadata = json.loads(args.meta)
+    # 🔁 Dispatch según comando
+    if args.comando == "mint_token":
+        metadata = {}
+        if args.meta:
+            try:
+                metadata = json.loads(args.meta)
+            except json.JSONDecodeError:
+                print("⚠️ Metadatos mal formateados. Asegúrate de usar JSON válido.")
+                return
         neurobank.mint_token(
             module=args.module,
             action=args.action,
             amount=args.amount,
             input_id=args.input_id,
+            crypto=args.crypto,
             metadata=metadata
         )
 
     elif args.comando == "mint_nft":
-        import json
-        metadata = json.loads(args.meta)
+        metadata = {}
+        if args.meta:
+            try:
+                metadata = json.loads(args.meta)
+            except json.JSONDecodeError:
+                print("⚠️ Metadatos mal formateados. Asegúrate de usar JSON válido.")
+                return
         neurobank.mint_nft(
             input_id=args.input_id,
             title=args.title,
+            crypto=args.crypto,
             metadata=metadata
         )
+
+    elif args.comando == "balance":
+        total = neurobank.get_balance(module=args.module)
+        print(f"📊 Balance total: {total}")
 
     elif args.comando == "list_tokens":
         neurobank.list_tokens(module=args.module)
@@ -63,8 +114,92 @@ def main():
     elif args.comando == "list_nfts":
         neurobank.list_nfts()
 
-    else:
-        parser.print_help()
+#    elif args.comando == "interactive":
+#        print("🔁 Entrando en modo interactivo. Escribe 'exit' para salir.\n")
+#        while True:
+#            try:
+#                comando = input("neurobank> ").strip()
+#                if comando.lower() in ["exit", "quit"]:
+#                    break
+#                args_list = comando.split()
+#                if not args_list:
+#                    continue
+#                parsed_args = parser.parse_args(args_list)
+#                args = parsed_args
+#                main()  # llama recursivamente para manejar el comando
+#            except Exception as e:
+#                print(f"❌ Error: {e}")
+
+    elif args.comando == "interactive":
+        print("=== 💠 MODO INTERACTIVO – NEUROBANK ===")
+
+        while True:
+            print("\nElige una opción:")
+            print("1. 🪙 Minar token")
+            print("2. 🖼️ Crear NFT")
+            print("3. 📊 Ver balance")
+            print("4. 📜 Ver historial de tokens")
+            print("5. 🧾 Ver historial de NFTs")
+            print("6. 🚪 Salir")
+
+            opcion = input(">> ").strip()
+
+            if opcion == "1":
+                print("\n🪙 Minar token:")
+                set_autocompleter(["symcontext", "modulo_ai", "bitacora", "clarai"])  # puedes usar settings.json para extenderlo
+                module = input("🔧 Módulo: ")
+                action = input("⚙️ Acción: ")
+                amount = input("🔢 Cantidad (default 1): ").strip() or "1"
+                input_id = input("🆔 ID de input (opcional): ").strip()
+                print("\n🪙 Criptos registradas:")
+                for code, desc in REGISTERED_CRYPTOS.items():
+                    print(f"  - {code}: {desc}")
+                set_autocompleter(list(REGISTERED_CRYPTOS.keys()))
+                crypto = input("🪙 Cripto (default NRN): ").strip() or "NRN"
+                meta = input("📎 Metadatos en JSON (opcional): ").strip()
+
+                try:
+                    amount = int(amount)
+                    input_id = int(input_id) if input_id else None
+                    metadata = json.loads(meta) if meta else {}
+                    neurobank.mint_token(module, action, amount, input_id, crypto, metadata)
+                except Exception as e:
+                    print(f"❌ Error al minar token: {e}")
+
+            elif opcion == "2":
+                print("\n🖼️ Crear NFT:")
+                input_id = input("🆔 ID de input: ")
+                title = input("🏷️ Título (opcional): ").strip()
+                print("\n🪙 Criptos registradas:")
+                for code, desc in REGISTERED_CRYPTOS.items():
+                    print(f"  - {code}: {desc}")
+                crypto = input("💠 Cripto (default neuroNFT): ").strip() or "neuroNFT"
+                meta = input("📎 Metadatos en JSON (opcional): ").strip()
+
+                try:
+                    input_id = int(input_id)
+                    metadata = json.loads(meta) if meta else {}
+                    neurobank.mint_nft(input_id, title, crypto, metadata)
+                except Exception as e:
+                    print(f"❌ Error al crear NFT: {e}")
+
+            elif opcion == "3":
+                module = input("🔍 Filtrar por módulo (deja vacío para total): ").strip()
+                total = neurobank.get_balance(module if module else None)
+                print(f"📊 Balance: {total}")
+
+            elif opcion == "4":
+                module = input("🔍 Filtrar por módulo (opcional): ").strip()
+                neurobank.list_tokens(module if module else None)
+
+            elif opcion == "5":
+                neurobank.list_nfts()
+
+            elif opcion == "6":
+                print("👋 Saliendo del modo interactivo...")
+                break
+            else:
+                print("❌ Opción no válida. Intenta de nuevo.")
 
 if __name__ == "__main__":
     main()
