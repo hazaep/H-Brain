@@ -32,8 +32,8 @@ def create_tables():
         title TEXT,
         crypto TEXT,
         metadata TEXT,
+        module TEXT,
         timestamp TEXT
-        module TEXT
     )
     """)
 

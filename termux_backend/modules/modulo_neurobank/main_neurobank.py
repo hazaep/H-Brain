@@ -4,10 +4,7 @@ import os
 import subprocess
 import shutil
 from termux_backend.modules.modulo_neurobank import neurobank
-from termux_backend.modules.modulo_neurobank.reports import (
-    export_tokens_summary_csv,
-    export_nfts_markdown,
-)
+from termux_backend.modules.modulo_neurobank import reports
 
 def termux_open_if_available(filepath):
     """Abre archivo con termux-open si se está en Termux y termux-api está disponible."""
@@ -24,13 +21,17 @@ def modo_interactivo():
         "2": ("Listar tokens", neurobank.list_tokens),
         "3": ("Listar NFTs", neurobank.list_nfts),
         "4": ("Minar token", lambda: neurobank.mint_token(
-            input("🔹 Módulo: "), input("🔸 Acción: "),
-            int(input("💰 Cantidad: ")), None,
+            input("🔹 Módulo: "),
+            input("🔸 Acción: "),
+            int(input("💰 Cantidad: ")),
+            input("🔗 Input ID: "),
+            input(" Crypto: "),
             json.loads(input("📎 Metadata (JSON): ") or "{}")
         )),
         "5": ("Crear NFT", lambda: neurobank.mint_nft(
             int(input("🔗 ID del input relacionado: ")),
             input("🎨 Título: "),
+            input(" Crypto: "),
             json.loads(input("📎 Metadata (JSON): ") or "{}"),
             input("🔹 Módulo: ")
         )),
