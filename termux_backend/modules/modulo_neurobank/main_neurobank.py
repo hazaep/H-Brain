@@ -4,7 +4,10 @@ import os
 import subprocess
 import shutil
 from termux_backend.modules.modulo_neurobank import neurobank
-from termux_backend.modules.modulo_neurobank import reports
+from termux_backend.modules.modulo_neurobank.reports import (
+    export_tokens_summary_csv,
+    export_nfts_markdown,
+)
 
 def termux_open_if_available(filepath):
     """Abre archivo con termux-open si se está en Termux y termux-api está disponible."""
