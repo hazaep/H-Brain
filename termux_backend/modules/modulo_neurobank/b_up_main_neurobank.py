@@ -19,6 +19,70 @@ def termux_open_if_available(filepath):
 
 def modo_interactivo():
     print("\n🧠 Bienvenido al modo interactivo de NeuroBank:")
+
+    def solicitar_metadata():
+        try:
+            raw = input("📎 Metadata (JSON): ") or "{}"
+            return json.loads(raw)
+        except json.JSONDecodeError as e:
+            print(f"⚠️ Metadata inválida (JSON): {e}")
+            return {}
+
+    opciones = {
+        "1": ("Ver balance total", lambda: print(f"📊 Balance total: {neurobank.get_balance()}")),
+
+        "2": ("Listar tokens", neurobank.list_tokens),
+
+        "3": ("Listar NFTs", neurobank.list_nfts),
+
+        "4": ("Minar token", lambda: neurobank.mint_token(
+            module=input("🔹 Módulo: "),
+            action=input("🔸 Acción: "),
+            amount=int(input("💰 Cantidad: ")),
+            input_id=input("🧾 Input id: "),
+            crypto=input("🪙 Crypto: "),
+            metadata=solicitar_metadata()
+        )),
+
+        "5": ("Crear NFT", lambda: neurobank.mint_nft(
+            input_id=int(input("🔗 ID del input relacionado: ")),
+            title=input("🎨 Título: "),
+            metadata=solicitar_metadata(),
+            module=input("🔹 Módulo: ")
+        )),
+
+        "6": ("📤 Exportar resumen de tokens a CSV", lambda: (
+            lambda path: (
+                export_tokens_summary_csv(path),
+                termux_open_if_available(path)
+            ))(input("📁 Ruta de salida (por defecto: tokens_report.csv): ") or "tokens_report.csv")
+        ),
+
+        "7": ("📝 Exportar NFTs a Markdown", lambda: (
+            lambda path: (
+                export_nfts_markdown(path),
+                termux_open_if_available(path)
+            ))(input("📁 Ruta de salida (por defecto: nft_report.md): ") or "nft_report.md")
+        ),
+
+        "0": ("Salir", lambda: exit())
+    }
+
+    while True:
+        print("\n📋 Opciones disponibles:")
+        for key, (desc, _) in opciones.items():
+            print(f" {key}. {desc}")
+        seleccion = input("👉 Elige una opción: ").strip()
+        if seleccion in opciones:
+            try:
+                opciones[seleccion][1]()
+            except Exception as e:
+                print(f"❌ Error al ejecutar la opción: {e}")
+        else:
+            print("⚠️ Opción no válida.")
+
+def modo_interactivo_bug():
+    print("\n🧠 Bienvenido al modo interactivo de NeuroBank:")
     opciones = {
         "1": ("Ver balance total", lambda: print(f"📊 Balance total: {neurobank.get_balance()}")),
         "2": ("Listar tokens", neurobank.list_tokens),
@@ -106,6 +170,7 @@ def main():
             action=args.action,
             amount=args.amount,
             input_id=args.input_id,
+            crypto="NRN",
             metadata=json.loads(args.meta)
         )
 
