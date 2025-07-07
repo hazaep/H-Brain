@@ -4,17 +4,17 @@ from datetime import datetime
 import os
 import sys
 import json
-from termux_backend.modules.modulo_neurobank.utils import get_neurobank_db_path
-DB_PATH = get_neurobank_db_path()
+#from termux_backend.modules.modulo_neurobank.utils import get_neurobank_db_path
+#DB_PATH = get_neurobank_db_path()
 
 # Cargar ruta desde settings.json
-#SETTINGS_PATH = os.path.expanduser("~/H-Brain/configs/settings.json")
-#with open(SETTINGS_PATH, "r") as f:
-#    settings = json.load(f)
+SETTINGS_PATH = os.path.expanduser("~/H-Brain/configs/settings.json")
+with open(SETTINGS_PATH, "r") as f:
+    settings = json.load(f)
 
-#DB_PATH = os.path.expanduser(os.path.join(
-#    "~/H-Brain", settings.get("neurobank_db_path", "termux_backend/database/naurobank_vault.db")
-#))
+DB_PATH = os.path.expanduser(os.path.join(
+    "~/H-Brain", settings.get("neurobank_db_path", "termux_backend/database/naurobank_vault.db")
+))
 
 # Criptos registradas en el sistema
 REGISTERED_CRYPTOS = {

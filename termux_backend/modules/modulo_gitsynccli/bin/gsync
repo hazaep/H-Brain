@@ -1,0 +1,39 @@
+#!/bin/bash
+
+COMMAND=$1
+shift
+
+# Ruta base del proyecto GitSyncCli
+BASE_DIR="$HOME/proyectos/GitSyncCli"
+
+# Si no se pasa argumento, modo interactivo
+if [[ -z "$COMMAND" ]]; then
+  echo "🧠 GitSyncCli - Modo Interactivo"
+  echo "Selecciona una acción:"
+  echo "  1) Flujo de desarrollo (pull → commit → push)"
+  echo "  2) Crear nuevo repositorio GitHub"
+  echo "  3) Crear rama de feature + PR"
+  echo "  4) Crear Issue + rama asociada"
+  echo "  5) Ver bandeja de entrada GitHub"
+  echo "  6) Salir"
+  read -p "Opción [1-6]: " opcion
+
+  case "$opcion" in
+    1) bash "$BASE_DIR/commands/dev.sh" ;;
+    2) bash "$BASE_DIR/commands/init.sh" ;;
+    3) bash "$BASE_DIR/commands/feature.sh" ;;
+    4) bash "$BASE_DIR/commands/issue.sh" ;;
+    5) bash "$BASE_DIR/commands/inbox.sh" ;;
+    6) echo "👋 Hasta luego"; exit 0 ;;
+    *) echo "❌ Opción inválida"; exit 1 ;;
+  esac
+else
+  case "$COMMAND" in
+    dev)     bash "$BASE_DIR/commands/dev.sh" "$@" ;;
+    init)    bash "$BASE_DIR/commands/init.sh" "$@" ;;
+    feature) bash "$BASE_DIR/commands/feature.sh" "$@" ;;
+    issue)   bash "$BASE_DIR/commands/issue.sh" "$@" ;;
+    inbox)   bash "$BASE_DIR/commands/inbox.sh" "$@" ;;
+    *) echo "❌ Comando no reconocido. Usa: dev, init, feature, issue, inbox" ;;
+  esac
+fi

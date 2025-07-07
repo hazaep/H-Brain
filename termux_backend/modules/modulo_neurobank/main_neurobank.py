@@ -24,13 +24,17 @@ def modo_interactivo():
         "2": ("Listar tokens", neurobank.list_tokens),
         "3": ("Listar NFTs", neurobank.list_nfts),
         "4": ("Minar token", lambda: neurobank.mint_token(
-            input("🔹 Módulo: "), input("🔸 Acción: "),
-            int(input("💰 Cantidad: ")), None,
+            input("🔹 Módulo: "),
+            input("🔸 Acción: "),
+            int(input("💰 Cantidad: ")),
+            input("🔗 Input ID: "),
+            input(" Crypto: "),
             json.loads(input("📎 Metadata (JSON): ") or "{}")
         )),
         "5": ("Crear NFT", lambda: neurobank.mint_nft(
             int(input("🔗 ID del input relacionado: ")),
             input("🎨 Título: "),
+            input(" Crypto: "),
             json.loads(input("📎 Metadata (JSON): ") or "{}"),
             input("🔹 Módulo: ")
         )),

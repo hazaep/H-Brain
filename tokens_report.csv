@@ -1,3 +1,4 @@
 Módulo,Acción,Crypto,Total Tokens,Operaciones
-test_module,test_action,NRN,3,1
-symcontext,registrar,NRN,1,1
+dev,prueba de funciones,DEVCOIN,1,1
+dev,prueba de minado,DEVCOIN,1,1
+dev,pruebas de reportes,DEVCOIN,1,1
