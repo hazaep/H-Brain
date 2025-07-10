@@ -1,3 +1,4 @@
+import os
 import json
 from termux_backend.modules.modulo_ai.ai_router import chat
 

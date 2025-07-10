@@ -1,8 +1,16 @@
+import os
+import json
 import sqlite3
 from termux_backend.modules.modulo_ai.ai_router import embed
-from termux_backend.modules.modulo_tools.utils import get_db_path
+from termux_backend.modules.modulo_tools.utils import get_settings  # get_db_path
 
-DB_PATH = get_db_path()
+#DB_PATH = get_db_path()
+
+# Cargar configuración del módulo NeuroBank
+_cfg = get_settings()
+SYM_CFG = _cfg.get("symcontext", {})
+DB_PATH = os.path.expanduser(_cfg.get("sym_db_path", "termux_backend/database/context.db"))
+
 
 def obtener_embedding(texto):
     texto = texto.strip()

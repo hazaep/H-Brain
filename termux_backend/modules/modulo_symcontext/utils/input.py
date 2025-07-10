@@ -12,7 +12,7 @@ from termux_backend.modules.modulo_tools.utils import get_settings  #, get_db_pa
 
 # Cargar configuración del módulo SymContext
 _cfg = get_settings()
-NB_CFG = _cfg.get("symcontext", {})
+SYM_CFG = _cfg.get("symcontext", {})
 DB_PATH = os.path.expanduser(_cfg.get("sym_db_path", "termux_backend/database/context.db"))
 
 
