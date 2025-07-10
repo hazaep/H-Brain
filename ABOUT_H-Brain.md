@@ -1,4 +1,3 @@
-
 H-Brain es un entorno simbiótico autoensamblado por una mente neurodivergente en expansión.
 
 No busca predecir el futuro ni formular algoritmos cerrados.

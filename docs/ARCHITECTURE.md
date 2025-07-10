@@ -34,7 +34,7 @@ H-Brain/termux_backend/modules/
 **Sistema de análisis narrativo y vector semántico.**
 
 - **Propósito**: Autoconciencia, metacognición, análisis del yo
-- **Entradas**: frases o reflexiones breves, clasificadas (propósito, identidad, tensión)
+- **Entradas**: frases o reflexiones breves, clasificadas autimaticamente (propósito, identidad, tensión, tags)
 
 #### Funciones clave:
 - Generación y análisis de embeddings
@@ -85,7 +85,7 @@ apy_debug.py          # debugging
 ### 🧾 Módulo: `modulo_bitacora/` *(en desarrollo)*
 **Memoria episódica y de reflexión escrita.**
 
-- 🧠 Se sincroniza con Evernote o sistemas externos de notas
+- 🧠 Se sincroniza con Evernote o sistemas externos de notas 
 - 🗃 Entrada de journaling o conversación completa + indexado semántico
 - 🔧 Posible aplicación futura para historización de ciclos emocionales–cognitivos
 
@@ -104,14 +104,14 @@ apy_debug.py          # debugging
 ---
 
 ### 🧰 Módulo: `modulo_gitsynccli/`
-**Automatización de Git como reflejo del "Yo que se olvida (pero quiere)."**
+**Automatización de Git y GitHub CLI como reflejo del "Yo que se olvida (pero quiere trabajar disciplinadamente)."**
 
-- Scripts CLI (`gsync`, `gsy`, `feature.sh`, etc.)
+- Scripts CLI (`gsync`, `gsy`, requieren alias o binario, etc.)
 - Integrado con recordatorios mentales y flujo simbólico ("Sincroniza con el yo de hace dos días")
 
 ---
 
-### 🌐 API central: `termux_backend/api.py`
+### 🌐 API central (aun en desarrollo): `termux_backend/api.py`
 Permite la ejecución estructurada de comandos vía HTTP/CLI.
 
 #### Endpoints disponibles:
@@ -139,7 +139,7 @@ En `termux_backend/database/` encontrarás:
 
 ---
 
-## 🔄 Flujo operativo básico
+## 🔄 Flujo operativo básico (en desarrollo)
 
 ```
 Tú (CLI / voz / nota)
@@ -153,15 +153,15 @@ Tú (CLI / voz / nota)
 
 ---
 
-## 📡 CLI Sample Commands
+## 📡 CLI Sample Commands (en desarrollo, algunos modulos ya cuentan con binario o alias)
 *(vía alias.lua o accesos rápidos)*
 
 ```bash
-hbrain say "¿Qué patrón narrativo estoy repitiendo esta semana?"
-hbrain graph /resonancias
-hbrain log "Me sentí disperso pero lúcido. Es como estar en alta RAM emocional."
-hbrain exec 'gsync commit indirecto'
-hbrain neuro report /atención
+brain say "¿Qué patrón narrativo estoy repitiendo esta semana?"
+brain graph /resonancias
+brain log "Me sentí disperso pero lúcido. Es como estar en alta RAM emocional."
+brain exec 'gsync commit indirecto'
+brain neuro report /atención
 ```
 
 ---
