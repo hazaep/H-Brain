@@ -27,7 +27,7 @@
     "enable_synap_tracing": true
   },
 
-  "modulo_symcontext": {
+  "symcontext": {
     "db_path": "termux_backend/database/context.db",
     "graph_output_dir": "/data/data/com.termux/files/home/storage/documents/graph_db",
     "embedding_model": "text-embedding-3-small"
@@ -39,7 +39,7 @@
     "temperature": 1.3,
     "history_db_path": "termux_backend/database/ai_history.db",
     "memory_db_path": "termux_backend/database/clarai_memory.db",
-    "memory_categories": ["proyectos", "Clarai", "usuario", "aprendizaje"],
+    "memory_categories": ["proyectos", "Clarai", username, "aprendizaje"],
     "extra_slots": 5,
     "max_memories": 5,
     "max_tokens": 7000

@@ -35,7 +35,8 @@ comandos disponibles:
   find_related        Buscar relaciones simbólicas a partir de un fragmento
   similares           Buscar pensamientos similares (por embeddings)
 """
-
+import os
+import json
 import sys
 import argparse
 from pathlib import Path
@@ -154,8 +155,10 @@ def ejecutar_comando(comando, args=None):
     elif comando == "config":
         print("🧾 Configuración actual:")
         try:
-            cfg = get_settings()
-            for k, v in cfg.items():
+# Cargar configuración del módulo SymContext
+            _cfg = get_settings()
+            sym_cfg = _cfg.get("symcontext", {})
+            for k, v in sym_cfg.items():
                 print(f"{k}: {v}")
         except Exception as e:
             print("❌ Error leyendo settings.json:", e)
