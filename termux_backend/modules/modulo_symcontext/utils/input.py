@@ -1,12 +1,20 @@
+import os
+import json
 import sqlite3
 from datetime import datetime
 from termux_backend.modules.modulo_symcontext.utils.classify_input import clasificar_input
 from termux_backend.modules.modulo_symcontext.utils.semantic_search import buscar_similares_emb
 from termux_backend.modules.modulo_symcontext.analysis.graph_builder import generar_grafo_contextual
-from termux_backend.modules.modulo_tools.utils import get_db_path, get_log_path
+from termux_backend.modules.modulo_tools.utils import get_settings  #, get_db_path, get_log_path
 
-DB_PATH = get_db_path()
-LOG_PATH = get_log_path("user_inputs.log")
+# DB_PATH = get_db_path()
+# LOG_PATH = get_log_path("user_inputs.log")
+
+# Cargar configuración del módulo SymContext
+_cfg = get_settings()
+NB_CFG = _cfg.get("symcontext", {})
+DB_PATH = os.path.expanduser(_cfg.get("sym_db_path", "termux_backend/database/context.db"))
+
 
 tags = ""
 
@@ -70,9 +78,6 @@ def save_input(texto, generar_grafo=True):
         if generar_grafo:
             path_grafo = generar_grafo_contextual()
             print(f"📍 Gráfico actualizado en:\n{path_grafo}")
-
-        # Log local
-        log_input(texto)
 
         # Retornar diccionario con datos clave
         return {

@@ -23,7 +23,7 @@
   "debug": false,
 
   "symcontext": {
-    "db_path": "termux_backend/database/context.db",
+    "sym_db_path": "termux_backend/database/context.db",
     "graph_output_dir": "/data/data/com.termux/files/home/storage/documents/graph_db",
     "embedding_model": "text-embedding-3-small"
   }
