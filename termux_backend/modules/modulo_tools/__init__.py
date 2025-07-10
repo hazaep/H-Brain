@@ -7,6 +7,5 @@ __all__ = [
     "get_settings",
     "get_db_path",
     "get_secret",
-    "get_log_path",
-    "get_symctx_set"
+    "get_log_path"
 ]

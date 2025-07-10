@@ -22,46 +22,9 @@
   "clarai_max_tokens": 7000,
   "debug": false,
 
-  "neurobank": {
-    "db_path": "termux_backend/database/neurobank_vault.db",
-    "enable_synap_tracing": true
-  },
-
   "symcontext": {
     "db_path": "termux_backend/database/context.db",
     "graph_output_dir": "/data/data/com.termux/files/home/storage/documents/graph_db",
     "embedding_model": "text-embedding-3-small"
-  },
-
-  "modulo_clarai": {
-    "model": "deepseek-chat",
-    "api_url": "https://api.deepseek.com/v1/chat/completions",
-    "temperature": 1.3,
-    "history_db_path": "termux_backend/database/ai_history.db",
-    "memory_db_path": "termux_backend/database/clarai_memory.db",
-    "memory_categories": ["proyectos", "Clarai", username, "aprendizaje"],
-    "extra_slots": 5,
-    "max_memories": 5,
-    "max_tokens": 7000
-  },
-
-  "api_keys": {
-    "openai_key_path": "configs/secrets/openai_key.txt",
-    "deepseek_key_path": "configs/secrets/deepseek_key.txt",
-    "groq_key_path": "configs/secrets/groq_key.txt",
-    "openrouter_key_path": "configs/secrets/openrouter_key.txt"
-  },
-
-  "global": {
-    "default_model": "openai",
-    "providers_preference": ["openai", "deepseek", "groq", "openrouter"],
-    "debug": false,
-    "modules_enabled": [
-      "modulo_symcontext",
-      "modulo_demo",
-      "modulo_ai",
-      "modulo_clarai",
-      "modulo_neurobank"
-    ]
   }
 }
