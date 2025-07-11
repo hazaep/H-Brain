@@ -3,4 +3,4 @@ venv/
 *.db
 *.log
 *_key.txt
-
+*.png
