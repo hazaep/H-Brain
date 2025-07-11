@@ -1,5 +1,4 @@
 {
-  "graph_output_dir": "/data/data/com.termux/files/home/storage/documents/graph_db",
   "default_model": "openai",
   "openai_key_path": "configs/secrets/openai_key.txt",
   "deepseek_key_path": "configs/secrets/deepseek_key.txt",
@@ -8,7 +7,6 @@
   "modules_enabled": ["modulo_symcontext", "modulo_demo", "modulo_ai"],
   "providers_preference": ["openai", "deepseek", "groq"],
   "embedding_model": "text-embedding-3-small",
-  "db_path": "termux_backend/database/context.db",
   "base_dir": "/data/data/com.termux/files/home/H-Brain",
   "neurobank_db_path": "termux_backend/database/neurobank_vault.db",
   "clarai_history_db_path": "termux_backend/database/ai_history.db",
@@ -24,7 +22,6 @@
 
   "symcontext": {
     "sym_db_path": "termux_backend/database/context.db",
-    "graph_output_dir": "/data/data/com.termux/files/home/storage/documents/graph_db",
-    "embedding_model": "text-embedding-3-small"
+    "graph_output_dir": "/data/data/com.termux/files/home/H-Brain/termux_backend/database/graphs"
   }
 }

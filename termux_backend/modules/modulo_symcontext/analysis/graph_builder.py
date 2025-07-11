@@ -1,17 +1,21 @@
-# analysis/graph_builder.py
-
 import os
+import json
 import sqlite3
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
-
-from termux_backend.modules.modulo_tools.utils import get_settings, get_db_path
+from datetime import datetime
+from termux_backend.modules.modulo_tools.utils import get_settings  # , get_db_path
 from termux_backend.modules.modulo_symcontext.utils.embedding import obtener_embedding
-#from utils.embedding import obtener_embedding
+
+# Cargar configuración del módulo NeuroBank
+
+_cfg = get_settings()
+SYM_CFG = _cfg.get("symcontext", {})
+# os.makedirs(output_dir, exist_ok=True)
 
 def cargar_entradas_con_embeddings():
-    db_path = get_db_path()
+    db_path = os.path.expanduser(SYM_CFG.get("sym_db_path", "termux_backend/database/context.db"))# get_db_path
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     cursor.execute("SELECT id, input_text, embedding FROM context_entries WHERE embedding IS NOT NULL")
@@ -63,8 +67,12 @@ def visualizar_grafo(G, output_path):
     plt.close()
 
 def generar_grafo_contextual(nombre="grafo.png", umbral=0.25):
-    config = get_settings()
-    output_dir = config.get("graph_output_dir", "./grafo_salidas")
+    ahora = datetime.now()
+    fecha = ahora.strftime("%d-%m-%Y_%H:%M:%S")
+    nombre = f"grafo_{fecha}.png"
+    #    config = get_settings()
+    #    SYM_CFG = _cfg.get("symcontext", {})
+    output_dir = SYM_CFG.get("graph_output_dir", "./grafo_salidas")
     os.makedirs(output_dir, exist_ok=True)
 
     entradas = cargar_entradas_con_embeddings()

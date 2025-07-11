@@ -13,8 +13,7 @@ from termux_backend.modules.modulo_tools.utils import get_settings  #, get_db_pa
 # Cargar configuración del módulo SymContext
 _cfg = get_settings()
 SYM_CFG = _cfg.get("symcontext", {})
-DB_PATH = os.path.expanduser(_cfg.get("sym_db_path", "termux_backend/database/context.db"))
-
+db_path = os.path.expanduser(SYM_CFG.get("sym_db_path", "termux_backend/database/context.db"))
 
 tags = ""
 
@@ -51,7 +50,7 @@ def save_input(texto, generar_grafo=True):
         return None  # ← Esto evita que retorne None sin control
 
     try:
-        conn = sqlite3.connect(DB_PATH)
+        conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
 
         # Clasificación del input

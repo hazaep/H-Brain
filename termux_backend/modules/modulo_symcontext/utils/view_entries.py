@@ -6,12 +6,12 @@ from termux_backend.modules.modulo_tools.utils import get_settings  # get_db_pat
 # Cargar configuración del módulo NeuroBank
 _cfg = get_settings()
 SYM_CFG = _cfg.get("symcontext", {})
-DB_PATH = os.path.expanduser(_cfg.get("sym_db_path", "termux_backend/database/context.db"))
+db_path = os.path.expanduser(SYM_CFG.get("sym_db_path", "termux_backend/database/context.db"))
 
 
 def mostrar_entradas(filtro_col=None, filtro_val=None):
     # db = get_db_path()
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
     if filtro_col and filtro_val:

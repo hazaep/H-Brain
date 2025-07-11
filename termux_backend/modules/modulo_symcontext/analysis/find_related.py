@@ -1,8 +1,14 @@
+import os
+import json
 import sqlite3
-from termux_backend.modules.modulo_tools.utils import get_db_path
+from termux_backend.modules.modulo_tools.utils import get_settings # get_db_path
+
+# Cargar configuración del módulo SymContext
+_cfg = get_settings()
+SYM_CFG = _cfg.get("symcontext", {})
 
 def encontrar_relaciones_basicas(texto_referencia):
-    db = get_db_path()
+    db = os.path.expanduser(SYM_CFG.get("sym_db_path", "termux_backend/database/context.db")) # get_db_path()
     conn = sqlite3.connect(db)
     cursor = conn.cursor()
 
