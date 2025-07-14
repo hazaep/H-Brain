@@ -3,8 +3,6 @@ import json
 import sqlite3
 from datetime import datetime
 from termux_backend.modules.modulo_tools.utils import get_settings
-from termux_backend.modules.modulo_neurobank.neurobank import mint_token
-
 # Cargar configuración global y del módulo
 _cfg = get_settings()
 NB_CFG = _cfg.get("neurobank", {})
@@ -68,7 +66,7 @@ def nrn_metadata(incremento, crypto, module=None):
     # Si corresponde, minar un nuevo Neuron
     if metadata_para_token:
         try:
-            mint_token(
+            mint_token_nrn(
                 module="neurobank",
                 action=f"Minado automático de NRN al alcanzar {RESET_MAX} unidades",
                 amount=1,

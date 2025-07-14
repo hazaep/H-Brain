@@ -4,13 +4,82 @@ import json
 import sqlite3
 from datetime import datetime
 from termux_backend.modules.modulo_tools.utils import get_settings
-from termux_backend.modules.modulo_neurobank.nrn_metadata import nrn_metadata
 
 # Cargar configuración del módulo NeuroBank
 _cfg = get_settings()
 NB_CFG = _cfg.get("neurobank", {})
 SYNAP_TRACING = NB_CFG.get("enable_synap_tracing", False)
-db_path = os.path.expanduser(NB_CFG.get("neurobank_db_path", "termux_backend/database/neurobank_vault.db"))
+db_path = os.path.expanduser(NB_CFG.get("nb_db_path", "termux_backend/database/neurobank_vault.db"))
+RESET_MAX = NB_CFG.get("reset_nrn", 500000)
+METADATA_PATH = os.path.expanduser(NB_CFG.get("nrn_metadata", "termux_backend/database/nrn_metadata.json"))
+
+
+def nrn_metadata(incremento, crypto, module=None):
+    """
+    Controla el costo acumulado y genera un token NRN cuando se supera el umbral configurado.
+    
+    Args:
+        incremento (int): Costo que se suma por la acción.
+        crypto (str): Tipo de token generado (SYMCOIN, AITHOUGHT, etc.)
+        module (str): Módulo que generó el token. Si no se especifica, se clasifica como no_reclamado.
+    """
+    path = METADATA_PATH
+
+    # Intentar cargar o inicializar la estructura
+    if os.path.exists(path):
+        try:
+            with open(path, 'r') as f:
+                data = json.load(f)
+        except json.JSONDecodeError:
+            print("⚠️ Archivo corrupto. Reiniciando metadata.")
+            data = {}
+    else:
+        data = {}
+
+    # Inicialización base
+    data.setdefault("costo", 0)
+    data.setdefault("ultimo_balance", 0)
+    data.setdefault("no_reclamados", {})
+
+    category = module if module else "no_reclamados"
+    data.setdefault(category, {})
+    data[category].setdefault(crypto, 0)
+
+    # Aplicar incremento
+    data[category][crypto] += 1
+    data["costo"] += incremento
+    current_costo = data["costo"]
+
+    # Condición de minado
+    should_mint = RESET_MAX is not None and current_costo >= RESET_MAX
+    metadata_para_token = None
+
+    if should_mint:
+        metadata_para_token = json.loads(json.dumps(data))  # Hacer copia profunda sin referencias
+        metadata_para_token["Neuron"] = "Token principal de H-Brain"
+
+        # Actualiza el balance acumulado y reinicia el costo
+        data["ultimo_balance"] += data["costo"]
+        data["costo"] = 0
+
+    # Guardar el estado actualizado
+    with open(path, 'w') as f:
+        json.dump(data, f, indent=4)
+
+    # Si corresponde, minar un nuevo Neuron
+    if metadata_para_token:
+        try:
+            mint_token_nrn(
+                module="neurobank",
+                action=f"Minado automático de NRN al alcanzar {RESET_MAX} unidades",
+                amount=1,
+                input_id=datetime.now().strftime('%d%m%Y_%H%M%S'),
+                metadata=str(metadata_para_token),
+                crypto="NRN"
+            )
+            print(f"🧠 NRN minado correctamente. Metadata registrada.")
+        except Exception as e:
+            print(f"❌ Error al minar NRN: {e}")
 
 # Criptos registradas en el sistema
 REGISTERED_CRYPTOS = {
@@ -23,31 +92,7 @@ REGISTERED_CRYPTOS = {
     "neuroNFT": "NeuroGem – NFT de introspección"
 }
 
-def mint_token(module, action, amount=1, input_id=None, metadata={}, crypto="NRN"):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        INSERT INTO neuro_tokens (module, action, amount, input_id, metadata, crypto, timestamp)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    """, (
-        module, action, amount, input_id,
-        json.dumps(metadata), crypto,
-        datetime.now().isoformat()
-    ))
-
-    conn.commit()
-    conn.close()
-
-    if crypto == "SYNAP":
-        nrn_metadata(incremento=1, crypto, module)
-        if SYNAP_TRACING:
-            print(f"🧩 [SYNAP] Token minado: {amount} | módulo: {module}, acción: {action}")
-    else:
-        nrn_metadata(incremento=10, crypto, module)
-        print(f"🪙 Token minado: {amount} | módulo: {module}, acción: {action}, crypto: {crypto}")
-
-def mint_token_dev(module, action, amount=1, input_id=None, crypto="NRN", metadata={}):
+def mint_token(module, action, amount=1, input_id=None, crypto="NRN", metadata={}):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     metadata_str = json.dumps(metadata)
@@ -58,7 +103,27 @@ def mint_token_dev(module, action, amount=1, input_id=None, crypto="NRN", metada
 
     conn.commit()
     conn.close()
-    print(f"🪙 Token minado: {amount} x [{crypto}] | módulo: {module}, acción: {action}")
+
+    if crypto == "SYNAP":
+        nrn_metadata(incremento=1, crypto=crypto, module=module)
+        if SYNAP_TRACING:
+            print(f"🧩 [SYNAP] Token minado: {amount} | módulo: {module}, acción: {action}")
+    else:
+        nrn_metadata(incremento=10, crypto=crypto, module=module)
+        print(f"🪙 Token minado: {amount} | módulo: {module}, acción: {action}, crypto: {crypto}")
+
+def mint_token_nrn(module, action, amount=1, input_id=None, crypto="NRN", metadata={}):
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    metadata_str = json.dumps(metadata)
+    cursor.execute("""
+        INSERT INTO neuro_tokens (module, action, amount, input_id, crypto, metadata, timestamp)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    """, (module, action, amount, input_id, crypto, f"{metadata_str}", datetime.now().isoformat()))
+
+    conn.commit()
+    conn.close()
+    print(f"🪙 Token minado: {amount} x [{crypto} 🧠]\n| módulo: {module}\n| acción: {action}\n| metadata:\n{metadata_str}")
 
 def mint_nft(input_id, title=None, crypto="neuroNFT", metadata={}, module="Neurobank"):
     conn = sqlite3.connect(db_path)
@@ -71,8 +136,7 @@ def mint_nft(input_id, title=None, crypto="neuroNFT", metadata={}, module="Neuro
 
     conn.commit()
     conn.close()
-    if 
-    nrn_metadata(incremento=1000, crypto, module)
+    nrn_metadata(incremento=1000, crypto=crypto, module=module)
     print(f"🖼️ NFT creado para input {input_id} - {module} - {title or 'Sin título'}")
 
 def get_balance(module=None, crypto=None):
