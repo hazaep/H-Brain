@@ -1,23 +1,18 @@
 import os
-import sqlite3
 import csv
 import json
+import sqlite3
 from datetime import datetime
-#from termux_backend.modules.modulo_neurobak.utils import get_neurobank_db_path
+from termux_backend.modules.modulo_tools.utils import get_settings
 
-#DB_PATH = get_neurobank_db_path()
-
-# Cargar ruta desde settings.json
-SETTINGS_PATH = os.path.expanduser("~/H-Brain/configs/settings.json")
-with open(SETTINGS_PATH, "r") as f:
-    settings = json.load(f)
-
-DB_PATH = os.path.expanduser(os.path.join(
-    "~/H-Brain", settings.get("neurobank_db_path", "termux_backend/database/naurobank_vault.db")
-))
+# Cargar configuración del módulo NeuroBank
+_cfg = get_settings()
+NB_CFG = _cfg.get("neurobank", {})
+SYNAP_TRACING = NB_CFG.get("enable_synap_tracing", False)
+db_path = os.path.expanduser(NB_CFG.get("nb_db_path", "termux_backend/database/neurobank_vault.db"))
 
 def export_tokens_summary_csv(output_file="tokens_report.csv"):
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -39,7 +34,7 @@ def export_tokens_summary_csv(output_file="tokens_report.csv"):
     print(f"✅ Reporte CSV exportado a: {output_file}")
 
 def export_nfts_markdown(output_file="nft_report.md"):
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
     cursor.execute("""
