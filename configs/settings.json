@@ -20,6 +20,13 @@
   "clarai_max_tokens": 7000,
   "debug": false,
 
+  "neurobank": {
+    "nb_db_path": "termux_backend/database/neurobank_vault.db",
+    "enable_synap_tracing": true,
+    "reset_nrn" : 500000,
+    "nrn_metadata" : "termux_backend/database/nrn_metadata.json"
+  },
+
   "symcontext": {
     "sym_db_path": "termux_backend/database/context.db",
     "graph_output_dir": "/data/data/com.termux/files/home/H-Brain/termux_backend/database/graphs"

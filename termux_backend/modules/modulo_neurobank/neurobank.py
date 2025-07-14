@@ -1,20 +1,16 @@
-import sqlite3
-import json
-from datetime import datetime
 import os
 import sys
 import json
-#from termux_backend.modules.modulo_neurobank.utils import get_neurobank_db_path
-#DB_PATH = get_neurobank_db_path()
+import sqlite3
+from datetime import datetime
+from termux_backend.modules.modulo_tools.utils import get_settings
+from termux_backend.modules.modulo_neurobank.nrn_metadata import nrn_metadata
 
-# Cargar ruta desde settings.json
-SETTINGS_PATH = os.path.expanduser("~/H-Brain/configs/settings.json")
-with open(SETTINGS_PATH, "r") as f:
-    settings = json.load(f)
-
-DB_PATH = os.path.expanduser(os.path.join(
-    "~/H-Brain", settings.get("neurobank_db_path", "termux_backend/database/naurobank_vault.db")
-))
+# Cargar configuración del módulo NeuroBank
+_cfg = get_settings()
+NB_CFG = _cfg.get("neurobank", {})
+SYNAP_TRACING = NB_CFG.get("enable_synap_tracing", False)
+db_path = os.path.expanduser(NB_CFG.get("neurobank_db_path", "termux_backend/database/neurobank_vault.db"))
 
 # Criptos registradas en el sistema
 REGISTERED_CRYPTOS = {
@@ -27,9 +23,32 @@ REGISTERED_CRYPTOS = {
     "neuroNFT": "NeuroGem – NFT de introspección"
 }
 
+def mint_token(module, action, amount=1, input_id=None, metadata={}, crypto="NRN"):
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
 
-def mint_token(module, action, amount=1, input_id=None, crypto="NRN", metadata={}):
-    conn = sqlite3.connect(DB_PATH)
+    cursor.execute("""
+        INSERT INTO neuro_tokens (module, action, amount, input_id, metadata, crypto, timestamp)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    """, (
+        module, action, amount, input_id,
+        json.dumps(metadata), crypto,
+        datetime.now().isoformat()
+    ))
+
+    conn.commit()
+    conn.close()
+
+    if crypto == "SYNAP":
+        nrn_metadata(incremento=1, crypto, module)
+        if SYNAP_TRACING:
+            print(f"🧩 [SYNAP] Token minado: {amount} | módulo: {module}, acción: {action}")
+    else:
+        nrn_metadata(incremento=10, crypto, module)
+        print(f"🪙 Token minado: {amount} | módulo: {module}, acción: {action}, crypto: {crypto}")
+
+def mint_token_dev(module, action, amount=1, input_id=None, crypto="NRN", metadata={}):
+    conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     metadata_str = json.dumps(metadata)
     cursor.execute("""
@@ -42,7 +61,7 @@ def mint_token(module, action, amount=1, input_id=None, crypto="NRN", metadata={
     print(f"🪙 Token minado: {amount} x [{crypto}] | módulo: {module}, acción: {action}")
 
 def mint_nft(input_id, title=None, crypto="neuroNFT", metadata={}, module="Neurobank"):
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     metadata_str = json.dumps(metadata)
     cursor.execute("""
@@ -52,10 +71,12 @@ def mint_nft(input_id, title=None, crypto="neuroNFT", metadata={}, module="Neuro
 
     conn.commit()
     conn.close()
+    if 
+    nrn_metadata(incremento=1000, crypto, module)
     print(f"🖼️ NFT creado para input {input_id} - {module} - {title or 'Sin título'}")
 
 def get_balance(module=None, crypto=None):
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
     query = "SELECT SUM(amount) FROM neuro_tokens"
@@ -78,7 +99,7 @@ def get_balance(module=None, crypto=None):
     return total
 
 def list_tokens(module=None):
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
     if module:
@@ -104,7 +125,7 @@ def list_tokens(module=None):
         print(f"📎 {row[5]}\n")
 
 def list_nfts():
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -124,7 +145,7 @@ def list_nfts():
         print(f"📎 {row[4]}\n")
 
 def report_tokens_by_crypto():
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -141,7 +162,7 @@ def report_tokens_by_crypto():
         print(f"🔹 {crypto}: {count} transacciones, {total} tokens")
 
 def report_tokens_by_module():
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -158,7 +179,7 @@ def report_tokens_by_module():
         print(f"🔸 {module}: {count} acciones, {total} tokens")
 
 def report_nfts_by_module():
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
     cursor.execute("""
