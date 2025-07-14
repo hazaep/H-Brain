@@ -30,6 +30,7 @@ def tag_input(user_input):
             clasificacion['purpose'],
             clasificacion['identity_mode'],
             clasificacion['tension'],
+            clasificacion['emotion'],
             clasificacion['tags'],
         )
 
@@ -54,7 +55,7 @@ def save_input(texto, generar_grafo=True):
         cursor = conn.cursor()
 
         # Clasificación del input
-        purpose, identity_mode, tension, tags = tag_input(texto)
+        purpose, identity_mode, tension, emotion, tags = tag_input(texto)
 
         # Obtener embedding, similares y convertir a string
         similares, embedding = buscar_similares_emb(texto)
@@ -62,9 +63,9 @@ def save_input(texto, generar_grafo=True):
 
         # Insertar en base de datos
         cursor.execute("""
-            INSERT INTO context_entries (input_text, purpose, identity_mode, tension, tags, embedding)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """, (texto, purpose, identity_mode, tension, tags, embedding_str))
+            INSERT INTO context_entries (input_text, purpose, identity_mode, tension, emotion, tags, embedding)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (texto, purpose, identity_mode, tension, emotion, tags, embedding_str))
         conn.commit()
 
         # Obtener ID recién insertado
@@ -85,6 +86,7 @@ def save_input(texto, generar_grafo=True):
             "purpose": purpose,
             "identity_mode": identity_mode,
             "tension": tension,
+            "emotion": emotion,
             "tags": tags,
             "grafo_path": path_grafo
         }
