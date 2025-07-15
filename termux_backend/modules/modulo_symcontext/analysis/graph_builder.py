@@ -1,17 +1,29 @@
-# analysis/graph_builder.py
-
 import os
+import json
 import sqlite3
+import shutil
+import subprocess
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
-
-from termux_backend.modules.modulo_tools.utils import get_settings, get_db_path
+from datetime import datetime
+from termux_backend.modules.modulo_tools.utils import get_settings  # , get_db_path
 from termux_backend.modules.modulo_symcontext.utils.embedding import obtener_embedding
-#from utils.embedding import obtener_embedding
+
+# Cargar configuración del módulo NeuroBank
+
+_cfg = get_settings()
+SYM_CFG = _cfg.get("symcontext", {})
+# os.makedirs(output_dir, exist_ok=True)
+
+def termux_open_if_available(filepath):
+    """Abre archivo con termux-open si se está en Termux y termux-api está disponible."""
+    if os.environ.get("PREFIX") and shutil.which("termux-open"):
+        print(f"📂 Abriendo Grafo: {filepath}")
+        subprocess.run(["termux-open", filepath])
 
 def cargar_entradas_con_embeddings():
-    db_path = get_db_path()
+    db_path = os.path.expanduser(SYM_CFG.get("sym_db_path", "termux_backend/database/context.db"))# get_db_path
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     cursor.execute("SELECT id, input_text, embedding FROM context_entries WHERE embedding IS NOT NULL")
@@ -63,8 +75,12 @@ def visualizar_grafo(G, output_path):
     plt.close()
 
 def generar_grafo_contextual(nombre="grafo.png", umbral=0.25):
-    config = get_settings()
-    output_dir = config.get("graph_output_dir", "./grafo_salidas")
+    ahora = datetime.now()
+    fecha = ahora.strftime("%d-%m-%Y_%H:%M:%S")
+    nombre = f"grafo_{fecha}.png"
+    #    config = get_settings()
+    #    SYM_CFG = _cfg.get("symcontext", {})
+    output_dir = SYM_CFG.get("graph_output_dir", "./grafo_salidas")
     os.makedirs(output_dir, exist_ok=True)
 
     entradas = cargar_entradas_con_embeddings()
@@ -75,9 +91,11 @@ def generar_grafo_contextual(nombre="grafo.png", umbral=0.25):
     G = construir_grafo(entradas, umbral=umbral)
     output_path = os.path.join(output_dir, nombre)
     visualizar_grafo(G, output_path)
+    termux_open_if_available(output_path)
     return output_path
 
 if __name__ == "__main__":
     ruta = generar_grafo_contextual()
+    termux_open_if_available(ruta)
     if ruta:
         print(f"✅ Grafo generado en:\n{ruta}")

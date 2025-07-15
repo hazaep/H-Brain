@@ -1,0 +1,34 @@
+{
+  "default_model": "openai",
+  "openai_key_path": "configs/secrets/openai_key.txt",
+  "deepseek_key_path": "configs/secrets/deepseek_key.txt",
+  "groq_key_path": "configs/secrets/groq_key.txt",
+  "openrouter_key_path":"configs/secrets/openrouter_key.txt",
+  "modules_enabled": ["modulo_symcontext", "modulo_demo", "modulo_ai"],
+  "providers_preference": ["openai", "deepseek", "groq"],
+  "embedding_model": "text-embedding-3-small",
+  "base_dir": "/data/data/com.termux/files/home/H-Brain",
+  "neurobank_db_path": "termux_backend/database/neurobank_vault.db",
+  "clarai_history_db_path": "termux_backend/database/ai_history.db",
+  "clarai_memory_db_path": "termux_backend/database/clarai_memory.db",
+  "clarai_model": "deepseek-chat",
+  "clarai_api_url": "https://api.deepseek.com/v1/chat/completions",
+  "clarai_temperature": 1.3,
+  "clarai_memory_categories": ["proyectos", "Clarai", "usuario", "aprendizaje"],
+  "clarai_extra_slots": 5,
+  "clarai_max_memories": 5,
+  "clarai_max_tokens": 7000,
+  "debug": false,
+
+  "neurobank": {
+    "nb_db_path": "termux_backend/database/neurobank_vault.db",
+    "enable_synap_tracing": true,
+    "reset_nrn" : 500000,
+    "nrn_metadata" : "termux_backend/database/nrn_metadata.json"
+  },
+
+  "symcontext": {
+    "sym_db_path": "termux_backend/database/context.db",
+    "graph_output_dir": "/data/data/com.termux/files/home/H-Brain/termux_backend/database/graphs"
+  }
+}

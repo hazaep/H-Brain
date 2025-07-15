@@ -1,12 +1,19 @@
+import os
+import json
 import sqlite3
 import numpy as np
 from termux_backend.modules.modulo_symcontext.utils.embedding import obtener_embedding
-from termux_backend.modules.modulo_tools.utils import get_db_path
+from termux_backend.modules.modulo_tools.utils import get_settings # get_db_path
 
-DB_PATH = get_db_path()
+# DB_PATH = get_db_path()
+
+# Cargar configuración del módulo NeuroBank
+_cfg = get_settings()
+SYM_CFG = _cfg.get("symcontext", {})
+db_path = os.path.expanduser(SYM_CFG.get("sym_db_path", "termux_backend/database/context.db"))
 
 def cargar_embeddings():
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     cursor.execute("SELECT id, input_text, embedding FROM context_entries WHERE embedding IS NOT NULL")
     datos = cursor.fetchall()

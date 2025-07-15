@@ -1,8 +1,14 @@
+import os
+import json
 import sqlite3
 from termux_backend.modules.modulo_ai.ai_router import embed
-from termux_backend.modules.modulo_tools.utils import get_db_path
+from termux_backend.modules.modulo_tools.utils import get_settings  # get_db_path
 
-DB_PATH = get_db_path()
+#DB_PATH = get_db_path()
+
+# Cargar configuración del módulo NeuroBank
+_cfg = get_settings()
+SYM_CFG = _cfg.get("symcontext", {})
 
 def obtener_embedding(texto):
     texto = texto.strip()
@@ -10,7 +16,8 @@ def obtener_embedding(texto):
         print("⚠️ Texto vacío, no se puede procesar.")
         return []
 
-    conn = sqlite3.connect(DB_PATH)
+    db = os.path.expanduser(SYM_CFG.get("sym_db_path", "termux_backend/database/context.db"))
+    conn = sqlite3.connect(db)
     cursor = conn.cursor()
 
     try:
