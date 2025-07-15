@@ -7,7 +7,7 @@ Uso directo:
   symctx similares "Texto de referencia"
   symctx grafo
   symctx timeline
-  symctx narrative
+  symctx narrative [--std]
   symctx transitions
   symctx verificar_db
   symctx config
@@ -131,7 +131,8 @@ def ejecutar_comando(comando, args=None):
         timeline_map_main()
 
     elif comando == "narrative":
-        narrative_blocks_main()
+        use_std = getattr(args, "std", False)
+        narrative_blocks_main(std=use_std)
 
     elif comando == "transitions":
         transitions_detect_main()
@@ -186,15 +187,12 @@ def main():
         help="No regenerar grafo tras el registro"
     )
 
-    sub.add_parser("view", help="Ver todas las entradas o filtrar")
-    sub.add_parser("verificar_db", help="Crear/actualizar tablas de DB")
-    sub.add_parser("test_ai", help="Probar router AI (chat/embed)")
-    sub.add_parser("config", help="Mostrar configuración actual")
-    sub.add_parser("grafo", help="Generar grafo semántico")
-    sub.add_parser("timeline", help="Mostrar línea de vida ASCII")
-    sub.add_parser("narrative", help="Bloques evolutivos narrativos")
-    sub.add_parser("transitions", help="Detectar transiciones")
-
+    sub_nrtv = sub.add_parser("narrative", help="Bloques evolutivos narrativos")
+    sub_nrtv.add_argument(
+        "--std",
+        action="store_true",
+        help="Usar salida estándar en bloques (sin IA)"
+    )
 
     sub_rel = sub.add_parser("find_related", help="Buscar relaciones simbólicas")
     sub_rel.add_argument("texto", help="Texto de referencia")
@@ -203,22 +201,27 @@ def main():
     sub_sim.add_argument("texto", help="Texto de referencia")
     sub_sim.add_argument("--top", type=int, default=5, help="Número de similares")
 
-#    args = parser.parse_args()
+    sub.add_parser("view", help="Ver todas las entradas o filtrar")
+    sub.add_parser("verificar_db", help="Crear/actualizar tablas de DB")
+    sub.add_parser("test_ai", help="Probar router AI (chat/embed)")
+    sub.add_parser("config", help="Mostrar configuración actual")
+    sub.add_parser("grafo", help="Generar grafo semántico")
+    sub.add_parser("timeline", help="Mostrar línea de vidas ASCII")
+    sub.add_parser("transitions", help="Detectar transiciones")
 
+#    args = parser.parse_args()
 #    if not args.command:
 #        ejecutar_menu_interactivo()
-
 
     if len(sys.argv) == 1:
         ejecutar_menu_interactivo()
         return
-
     else:
         args = parser.parse_args()
 
 #    else:
         # CLI directo: si el comando admite texto como argumento, úsalo
-        if args.command in ("registrar", "similares", "find_related"):
+        if args.command in ("registrar", "similares", "find_related", "narrative" ):
             # Si se pasó por CLI el texto, sobreescribe el prompt
             texto_cli = getattr(args, "texto", None)
             if texto_cli:
@@ -233,7 +236,9 @@ def main():
                 elif args.command == "similares":
                     buscar_similares_emb(texto_cli)
                     return
-                # args.command == "find_related":
+                elif args.comando == "narrative":
+                    use_std = texto_cli
+                    narrative_blocks_main(std=use_std)
                 else:
                     encontrar_relaciones_basicas(texto_cli)
                     return
