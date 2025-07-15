@@ -10,3 +10,5 @@ class TestClasificarInput(unittest.TestCase):
         self.assertIn("purpose", resultado)
         self.assertIn("identity_mode", resultado)
         self.assertIn("tension", resultado)
+        self.assertIn("emotion", resultado)
+        self.assertIn("tags", resultado)
