@@ -131,15 +131,13 @@ def ejecutar_comando(comando, args=None):
         use_std = getattr(args, "std", False)
         timeline_map_main(std=use_std)
 
-#    elif comando == "timeline":
-  #      timeline_map_main()
-
     elif comando == "narrative":
         use_std = getattr(args, "std", False)
         narrative_blocks_main(std=use_std)
 
     elif comando == "transitions":
-        transitions_detect_main()
+        use_std = getattr(args, "std", False)
+        transitions_detect_main(std=use_std)
 
     elif comando == "verificar_db":
         cargar_schema_si_falta()
@@ -198,6 +196,9 @@ def main():
         help="Usar salida estándar en bloques (sin IA)"
     )
 
+    sub_trans = sub.add_parser("transitions", help="Detectar transiciones simbólicas")
+    sub_trans.add_argument("--std", action="store_true", help="Usar vista estándar sin IA")
+
     sub_time = sub.add_parser("timeline", help="Mostrar línea de vida simbólica")
     sub_time.add_argument("--std", action="store_true", help="Usar salida estándar (sin IA)")
 
@@ -213,7 +214,6 @@ def main():
     sub.add_parser("test_ai", help="Probar router AI (chat/embed)")
     sub.add_parser("config", help="Mostrar configuración actual")
     sub.add_parser("grafo", help="Generar grafo semántico")
-    sub.add_parser("transitions", help="Detectar transiciones")
 
 #    args = parser.parse_args()
 #    if not args.command:
@@ -248,6 +248,9 @@ def main():
                 elif comando == "timeline":
                     use_std = texto_cli
                     timeline_map_main(std=use_std)
+                elif comando == "transitions":
+                    use_std = texto_cli
+                    transitions_detect_main(std=use_std)
                 else:
                     encontrar_relaciones_basicas(texto_cli)
                     return
