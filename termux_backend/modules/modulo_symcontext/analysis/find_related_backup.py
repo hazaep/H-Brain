@@ -1,7 +1,5 @@
 import os
 import sqlite3
-import re
-from datetime import datetime
 from termux_backend.modules.modulo_tools.utils import get_settings
 from termux_backend.modules.modulo_symcontext.utils.semantic_search import buscar_similares_emb
 from termux_backend.modules.modulo_symcontext.analysis.symbolic_analysis import analizar_similares
@@ -9,30 +7,6 @@ from termux_backend.modules.modulo_symcontext.analysis.symbolic_analysis import 
 # Cargar configuración del módulo SymContext
 _cfg = get_settings()
 SYM_CFG = _cfg.get("symcontext", {})
-
-RELATED_DIR = os.path.expanduser("termux_backend/database/related")
-
-def sanitizar_nombre(nombre):
-    """Convierte texto a un nombre de archivo válido"""
-    nombre = nombre.lower().strip()
-    nombre = re.sub(r"[^a-z0-9]+", "_", nombre)
-    return nombre[:40] or "entrada"
-
-def guardar_en_archivo(texto, similares, contenido):
-    contador = 0
-    os.makedirs(RELATED_DIR, exist_ok=True)
-    timestamp = datetime.now().strftime("%d%m%Y-%H%M%S")
-    nombre_base = sanitizar_nombre(texto)
-    filename = f"{nombre_base}_{timestamp}.md"
-    ruta = os.path.join(RELATED_DIR, filename)
-    with open(ruta, "w", encoding="utf-8") as f:
-        f.write("# 🧠 Análisis simbiótico\n")
-        f.write(f"🕓 Generado: {timestamp}\n\n")
-        for i in similares:
-            contador += 1
-            f.write(f" Entrada #{contador}\n{i}\n")
-        f.write(contenido)
-    print(f"\n\n📁 Resultado guardado en: {ruta}")
 
 def encontrar_relaciones_semanticas(texto_referencia):
     db_path = os.path.expanduser(SYM_CFG.get("sym_db_path", "termux_backend/database/context.db"))
@@ -52,6 +26,7 @@ def encontrar_relaciones_semanticas(texto_referencia):
         base_entry = {"id": resultado[0], "texto": resultado[1]}
         print(f"🎯 Entrada encontrada en DB: #{base_entry['id']}")
     else:
+        # Si no está registrada, se crea una entrada base dummy
         base_entry = {"id": 0, "texto": texto_referencia}
         print("📎 Fragmento no encontrado en DB. Usando texto como entrada base.")
 
@@ -65,10 +40,7 @@ def encontrar_relaciones_semanticas(texto_referencia):
     similares_fmt = [{"id": id_, "texto": texto} for _, id_, texto in similares]
 
     print("\n🧠 Análisis simbiótico enriquecido por IA:\n")
-    resultado = analizar_similares(base_entry, similares_fmt)
-    print(resultado)
-
-    guardar_en_archivo(base_entry["texto"], similares_fmt, resultado)
+    print(analizar_similares(base_entry, similares_fmt))
 
 
 def main():
