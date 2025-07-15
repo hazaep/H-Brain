@@ -1,17 +1,6 @@
 {
   "base_dir": "/data/data/com.termux/files/home/H-Brain",
 
-  "neurobank": {
-    "db_path": "termux_backend/database/neurobank_vault.db",
-    "enable_synap_tracing": true
-  },
-
-  "modulo_symcontext": {
-    "db_path": "termux_backend/database/context.db",
-    "graph_output_dir": "/data/data/com.termux/files/home/storage/documents/graph_db",
-    "embedding_model": "text-embedding-3-small"
-  },
-
   "modulo_clarai": {
     "model": "deepseek-chat",
     "api_url": "https://api.deepseek.com/v1/chat/completions",
