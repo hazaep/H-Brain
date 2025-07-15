@@ -4,7 +4,7 @@ COMMAND=$1
 shift
 
 # Ruta base del proyecto GitSyncCli
-BASE_DIR="$HOME/proyectos/GitSyncCli"
+BASE_DIR="$HOME/H-Brain/termux_backend/modules/modulo_gitsynccli"
 
 # Si no se pasa argumento, modo interactivo
 if [[ -z "$COMMAND" ]]; then
