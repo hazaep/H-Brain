@@ -1,9 +1,12 @@
 import os
 import json
 import sqlite3
-from termux_backend.modules.modulo_tools.utils import get_settings # get_db_path
+import argparse
 
-# Cargar configuración del módulo SymContext
+from termux_backend.modules.modulo_tools.utils import get_settings
+from termux_backend.modules.modulo_symcontext.analysis import symbolic_analysis
+
+# Cargar configuración
 _cfg = get_settings()
 SYM_CFG = _cfg.get("symcontext", {})
 
@@ -25,8 +28,8 @@ tension_icons = {
 def normalizar(valor, diccionario):
     return diccionario.get(valor.lower(), "❔")
 
-def generar_mapa():
-    db = os.path.expanduser(SYM_CFG.get("sym_db_path", "termux_backend/database/context.db")) #get_db_path()
+def generar_mapa_estandar():
+    db = os.path.expanduser(SYM_CFG.get("sym_db_path", "termux_backend/database/context.db"))
     conn = sqlite3.connect(db)
     cursor = conn.cursor()
     cursor.execute("""
@@ -44,8 +47,43 @@ def generar_mapa():
         icon_t = normalizar(t, tension_icons)
         print(f"#{str(id_).zfill(3)} | {icon_p} {icon_i} {icon_t}  → {p}/{i}/{t}")
 
-def main():
-    generar_mapa()
+def generar_mapa_ia():
+    db = os.path.expanduser(SYM_CFG.get("sym_db_path", "termux_backend/database/context.db"))
+    conn = sqlite3.connect(db)
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT id, purpose, identity_mode, tension
+        FROM context_entries
+        ORDER BY timestamp ASC
+    """)
+    rows = cursor.fetchall()
+    conn.close()
+
+    entries = []
+    for row in rows:
+        id_, p, i, t = row
+        entries.append({
+            "id": id_,
+            "purpose": p or "❔",
+            "identity_mode": i or "❔",
+            "tension": t or "❔"
+        })
+
+    print("✨ Línea de vida simbólica recibida. Enviando a análisis simbiótico IA...\n")
+    try:
+        resultado = symbolic_analysis.analizar_timeline(entries)
+        print(resultado.strip())
+    except Exception as e:
+        print("❌ Error al generar análisis con IA:", e)
+
+def main(std=False):
+    if std:
+        generar_mapa_estandar()
+    else:
+        generar_mapa_ia()
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--std", action="store_true", help="Usar salida estándar (sin IA)")
+    args = parser.parse_args()
+    main(std=args.std)

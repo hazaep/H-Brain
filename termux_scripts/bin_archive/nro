@@ -1,0 +1,3 @@
+#!/bin/bash
+cd ~/H-Brain
+PYTHONPATH=. python3 termux_backend/modules/modulo_neurobank/main_neurobank.py "$@"

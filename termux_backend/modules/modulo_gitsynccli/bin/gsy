@@ -1,4 +1,0 @@
-#!/bin/bash
-# Atajo ejecutable para GitSyncCli
-
-exec ~/proyectos/GitSyncCli/git_sync_cli.sh "$@"

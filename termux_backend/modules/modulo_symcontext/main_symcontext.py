@@ -6,9 +6,9 @@ Uso directo:
   symctx registrar "Texto a registrar" [--no-generate]
   symctx similares "Texto de referencia"
   symctx grafo
-  symctx timeline
-  symctx narrative
-  symctx transitions
+  symctx timeline [--std]
+  symctx narrative [--std]
+  symctx transitions [--std]
   symctx verificar_db
   symctx config
   symctx test_ai
@@ -57,8 +57,7 @@ from analysis.graph_builder import generar_grafo_contextual
 from analysis.timeline_map import main as timeline_map_main
 from analysis.narrative_blocks import main as narrative_blocks_main
 from analysis.transitions_detect import main as transitions_detect_main
-from analysis.find_related import encontrar_relaciones_basicas
-
+from analysis.find_related import encontrar_relaciones_semanticas
 
 def ejecutar_menu_interactivo():
     opciones = [
@@ -128,13 +127,16 @@ def ejecutar_comando(comando, args=None):
         print(f"📍 Grafo generado en: {path}")
 
     elif comando == "timeline":
-        timeline_map_main()
+        use_std = getattr(args, "std", False)
+        timeline_map_main(std=use_std)
 
     elif comando == "narrative":
-        narrative_blocks_main()
+        use_std = getattr(args, "std", False)
+        narrative_blocks_main(std=use_std)
 
     elif comando == "transitions":
-        transitions_detect_main()
+        use_std = getattr(args, "std", False)
+        transitions_detect_main(std=use_std)
 
     elif comando == "verificar_db":
         cargar_schema_si_falta()
@@ -168,7 +170,7 @@ def ejecutar_comando(comando, args=None):
         if not ref:
             print("⚠️ Texto vacío.")
             return
-        encontrar_relaciones_basicas(ref)
+        encontrar_relaciones_semanticas(texto_cli)
 
     else:
         print(f"❌ Comando desconocido: {comando}")
@@ -186,15 +188,18 @@ def main():
         help="No regenerar grafo tras el registro"
     )
 
-    sub.add_parser("view", help="Ver todas las entradas o filtrar")
-    sub.add_parser("verificar_db", help="Crear/actualizar tablas de DB")
-    sub.add_parser("test_ai", help="Probar router AI (chat/embed)")
-    sub.add_parser("config", help="Mostrar configuración actual")
-    sub.add_parser("grafo", help="Generar grafo semántico")
-    sub.add_parser("timeline", help="Mostrar línea de vida ASCII")
-    sub.add_parser("narrative", help="Bloques evolutivos narrativos")
-    sub.add_parser("transitions", help="Detectar transiciones")
+    sub_nrtv = sub.add_parser("narrative", help="Bloques evolutivos narrativos")
+    sub_nrtv.add_argument(
+        "--std",
+        action="store_true",
+        help="Usar salida estándar en bloques (sin IA)"
+    )
 
+    sub_trans = sub.add_parser("transitions", help="Detectar transiciones simbólicas")
+    sub_trans.add_argument("--std", action="store_true", help="Usar vista estándar sin IA")
+
+    sub_time = sub.add_parser("timeline", help="Mostrar línea de vida simbólica")
+    sub_time.add_argument("--std", action="store_true", help="Usar salida estándar (sin IA)")
 
     sub_rel = sub.add_parser("find_related", help="Buscar relaciones simbólicas")
     sub_rel.add_argument("texto", help="Texto de referencia")
@@ -203,22 +208,25 @@ def main():
     sub_sim.add_argument("texto", help="Texto de referencia")
     sub_sim.add_argument("--top", type=int, default=5, help="Número de similares")
 
-#    args = parser.parse_args()
+    sub.add_parser("view", help="Ver todas las entradas o filtrar")
+    sub.add_parser("verificar_db", help="Crear/actualizar tablas de DB")
+    sub.add_parser("test_ai", help="Probar router AI (chat/embed)")
+    sub.add_parser("config", help="Mostrar configuración actual")
+    sub.add_parser("grafo", help="Generar grafo semántico")
 
+#    args = parser.parse_args()
 #    if not args.command:
 #        ejecutar_menu_interactivo()
-
 
     if len(sys.argv) == 1:
         ejecutar_menu_interactivo()
         return
-
     else:
         args = parser.parse_args()
 
 #    else:
         # CLI directo: si el comando admite texto como argumento, úsalo
-        if args.command in ("registrar", "similares", "find_related"):
+        if args.command in ("registrar", "similares", "find_related", "narrative", "timeline" ):
             # Si se pasó por CLI el texto, sobreescribe el prompt
             texto_cli = getattr(args, "texto", None)
             if texto_cli:
@@ -233,9 +241,17 @@ def main():
                 elif args.command == "similares":
                     buscar_similares_emb(texto_cli)
                     return
-                # args.command == "find_related":
+                elif args.command == "narrative":
+                    use_std = texto_cli
+                    narrative_blocks_main(std=use_std)
+                elif args.command == "timeline":
+                    use_std = texto_cli
+                    timeline_map_main(std=use_std)
+                elif args.command == "transitions":
+                    use_std = texto_cli
+                    transitions_detect_main(std=use_std)
                 else:
-                    encontrar_relaciones_basicas(texto_cli)
+                    encontrar_relaciones_semanticas(texto_cli)
                     return
 
         # Para el resto, llamamos a ejecutar_comando

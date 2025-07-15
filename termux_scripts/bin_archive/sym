@@ -1,0 +1,10 @@
+#!/bin/bash
+cd /data/data/com.termux/files/home/H-Brain
+
+# Comandos con un solo argumento largo
+if [[ "$1" == "registrar" || "$1" == "similares" || "$1" == "find_related" ]]; then
+    args="${*:2}"
+    PYTHONPATH=. python3 termux_backend/modules/modulo_symcontext/main_symcontext.py "$1" "$args"
+else
+    PYTHONPATH=. python3 termux_backend/modules/modulo_symcontext/main_symcontext.py "$@"
+fi

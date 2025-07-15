@@ -1,0 +1,4 @@
+#!/bin/bash
+# Atajo ejecutable para GitSyncCli
+
+exec ~/H-Brain/termux_backend/modules/modulo_gitsynccli/git_sync_cli.sh "$@"
