@@ -1,5 +1,6 @@
 import os
 import json
+import math
 import sqlite3
 from termux_backend.modules.modulo_ai.ai_router import embed
 from termux_backend.modules.modulo_tools.utils import get_settings  # get_db_path
@@ -9,6 +10,12 @@ from termux_backend.modules.modulo_tools.utils import get_settings  # get_db_pat
 # Cargar configuración del módulo NeuroBank
 _cfg = get_settings()
 SYM_CFG = _cfg.get("symcontext", {})
+
+def cosine_similarity(vec1, vec2):
+    dot = sum(a*b for a, b in zip(vec1, vec2))
+    norm1 = math.sqrt(sum(a*a for a in vec1))
+    norm2 = math.sqrt(sum(b*b for b in vec2))
+    return dot / (norm1 * norm2 + 1e-9)
 
 def obtener_embedding(texto):
     texto = texto.strip()

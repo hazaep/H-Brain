@@ -6,9 +6,9 @@ Uso directo:
   symctx registrar "Texto a registrar" [--no-generate]
   symctx similares "Texto de referencia"
   symctx grafo
-  symctx timeline
+  symctx timeline [--std]
   symctx narrative [--std]
-  symctx transitions
+  symctx transitions [--std]
   symctx verificar_db
   symctx config
   symctx test_ai
@@ -57,8 +57,7 @@ from analysis.graph_builder import generar_grafo_contextual
 from analysis.timeline_map import main as timeline_map_main
 from analysis.narrative_blocks import main as narrative_blocks_main
 from analysis.transitions_detect import main as transitions_detect_main
-from analysis.find_related import encontrar_relaciones_basicas
-
+from analysis.find_related import encontrar_relaciones_semanticas
 
 def ejecutar_menu_interactivo():
     opciones = [
@@ -171,7 +170,7 @@ def ejecutar_comando(comando, args=None):
         if not ref:
             print("⚠️ Texto vacío.")
             return
-        encontrar_relaciones_basicas(ref)
+        encontrar_relaciones_semanticas(texto_cli)
 
     else:
         print(f"❌ Comando desconocido: {comando}")
@@ -242,17 +241,17 @@ def main():
                 elif args.command == "similares":
                     buscar_similares_emb(texto_cli)
                     return
-                elif args.comando == "narrative":
+                elif args.command == "narrative":
                     use_std = texto_cli
                     narrative_blocks_main(std=use_std)
-                elif comando == "timeline":
+                elif args.command == "timeline":
                     use_std = texto_cli
                     timeline_map_main(std=use_std)
-                elif comando == "transitions":
+                elif args.command == "transitions":
                     use_std = texto_cli
                     transitions_detect_main(std=use_std)
                 else:
-                    encontrar_relaciones_basicas(texto_cli)
+                    encontrar_relaciones_semanticas(texto_cli)
                     return
 
         # Para el resto, llamamos a ejecutar_comando
