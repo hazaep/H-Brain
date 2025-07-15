@@ -128,7 +128,11 @@ def ejecutar_comando(comando, args=None):
         print(f"📍 Grafo generado en: {path}")
 
     elif comando == "timeline":
-        timeline_map_main()
+        use_std = getattr(args, "std", False)
+        timeline_map_main(std=use_std)
+
+#    elif comando == "timeline":
+  #      timeline_map_main()
 
     elif comando == "narrative":
         use_std = getattr(args, "std", False)
@@ -194,6 +198,9 @@ def main():
         help="Usar salida estándar en bloques (sin IA)"
     )
 
+    sub_time = sub.add_parser("timeline", help="Mostrar línea de vida simbólica")
+    sub_time.add_argument("--std", action="store_true", help="Usar salida estándar (sin IA)")
+
     sub_rel = sub.add_parser("find_related", help="Buscar relaciones simbólicas")
     sub_rel.add_argument("texto", help="Texto de referencia")
 
@@ -206,7 +213,6 @@ def main():
     sub.add_parser("test_ai", help="Probar router AI (chat/embed)")
     sub.add_parser("config", help="Mostrar configuración actual")
     sub.add_parser("grafo", help="Generar grafo semántico")
-    sub.add_parser("timeline", help="Mostrar línea de vidas ASCII")
     sub.add_parser("transitions", help="Detectar transiciones")
 
 #    args = parser.parse_args()
@@ -221,7 +227,7 @@ def main():
 
 #    else:
         # CLI directo: si el comando admite texto como argumento, úsalo
-        if args.command in ("registrar", "similares", "find_related", "narrative" ):
+        if args.command in ("registrar", "similares", "find_related", "narrative", "timeline" ):
             # Si se pasó por CLI el texto, sobreescribe el prompt
             texto_cli = getattr(args, "texto", None)
             if texto_cli:
@@ -239,6 +245,9 @@ def main():
                 elif args.comando == "narrative":
                     use_std = texto_cli
                     narrative_blocks_main(std=use_std)
+                elif comando == "timeline":
+                    use_std = texto_cli
+                    timeline_map_main(std=use_std)
                 else:
                     encontrar_relaciones_basicas(texto_cli)
                     return
