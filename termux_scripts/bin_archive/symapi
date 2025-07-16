@@ -1,0 +1,4 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# Ejecuta la API de SymContext desde cualquier lugar
+
+bash data/data/com.termux/files/home/H-Brain/termux_backend/modules/modulo_symcontext/api/start_api.sh
