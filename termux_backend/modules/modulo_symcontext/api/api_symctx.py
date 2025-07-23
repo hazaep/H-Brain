@@ -23,6 +23,18 @@ class RegistroInput(BaseModel):
 class TextoEntrada(BaseModel):
     texto: str
 
+@app.post("/symctx/register")
+def registrar_entrada(data: RegistroInput):
+    info = save_input(
+        texto=data.texto,
+            #purpose=data.purpose,
+            #identity_mode=data.identity_mode,
+            #tension=data.tension,
+            #emotion=data.emotion,
+            #tags=data.tags
+    )
+    return {"status": "ok", "registrado": info}
+
 @app.get("/symctx/view")
 def ver_entradas(limit: int = Query(default=50, ge=1, le=500)):
     """
@@ -69,18 +81,6 @@ def simbolicos_relacionados(data: TextoEntrada):
         "analisis": analisis,
         "similares_encontrados": len(similares)
     }
-
-@app.post("/symctx/register")
-def registrar_entrada(data: RegistroInput):
-    info = save_input(
-        texto=data.texto,
-            #purpose=data.purpose,
-            #identity_mode=data.identity_mode,
-            #tension=data.tension,
-            #emotion=data.emotion,
-            #tags=data.tags
-    )
-    return {"status": "ok", "registrado": info}
 
 @app.post("/symctx/similares")
 def buscar_similares(data: TextoEntrada):

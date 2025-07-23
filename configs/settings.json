@@ -18,7 +18,7 @@
   "clarai_extra_slots": 5,
   "clarai_max_memories": 5,
   "clarai_max_tokens": 7000,
-  "debug": false,
+  "debug": true,
 
   "neurobank": {
     "nb_db_path": "termux_backend/database/neurobank_vault.db",
