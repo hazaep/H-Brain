@@ -28,6 +28,7 @@
   },
 
   "symcontext": {
+    "api_token": "sym-6565900705",
     "sym_db_path": "termux_backend/database/context.db",
     "graph_output_dir": "/data/data/com.termux/files/home/H-Brain/termux_backend/database/graphs",
     "related_output_dir": "/data/data/com.termux/files/home/H-Brain/termux_backend/database/related"
