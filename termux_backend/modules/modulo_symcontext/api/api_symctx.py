@@ -1,6 +1,9 @@
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Request, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Optional
+
+# Utils y configuración
+from termux_backend.modules.modulo_tools.utils import get_settings
 from termux_backend.modules.modulo_symcontext.utils.input import save_input
 from termux_backend.modules.modulo_symcontext.utils.semantic_search import buscar_similares_emb
 from termux_backend.modules.modulo_symcontext.api.core_symctx import obtener_todas_las_entradas
@@ -10,80 +13,76 @@ from termux_backend.modules.modulo_symcontext.analysis.symbolic_analysis import 
     analizar_similares
 )
 
+# Configuración global y token
+settings = get_settings()
+SYM_CFG = settings.get("symcontext", {})
+API_TOKEN = SYM_CFG.get("api_token", "")
+
+# App FastAPI
 app = FastAPI(title="SymContext API")
+
+# ----------------------------- 🔐 Autenticación por Token -----------------------------
+
+def verificar_token(request: Request):
+    token = request.headers.get("Authorization")
+    if not token or token != f"Bearer {API_TOKEN}":
+        raise HTTPException(status_code=401, detail="Token inválido o no provisto")
+
+# ----------------------------- 📦 Esquemas de entrada -----------------------------
 
 class RegistroInput(BaseModel):
     texto: str
-    purpose: Optional[str] = "otro"
-    identity_mode: Optional[str] = "otro"
-    tension: Optional[str] = "ninguna"
-    emotion: Optional[str] = "neutral"
-    tags: Optional[str] = ""
 
 class TextoEntrada(BaseModel):
     texto: str
+    top_n: Optional[int] = 5  # valor por defecto
+
+# ----------------------------- 📌 Endpoints protegidos -----------------------------
 
 @app.post("/symctx/register")
-def registrar_entrada(data: RegistroInput):
-    info = save_input(
-        texto=data.texto,
-            #purpose=data.purpose,
-            #identity_mode=data.identity_mode,
-            #tension=data.tension,
-            #emotion=data.emotion,
-            #tags=data.tags
-    )
+def registrar_entrada(data: RegistroInput, _: str = Depends(verificar_token)):
+    info = save_input(texto=data.texto)
     return {"status": "ok", "registrado": info}
 
-@app.get("/symctx/view")
-def ver_entradas(limit: int = Query(default=50, ge=1, le=500)):
-    """
-    Devuelve entradas introspectivas en orden temporal ascendente.
-    Puedes limitar el número de resultados (default: 50, máximo: 500)
-    """
-    entradas = obtener_todas_las_entradas(limit=limit)
-    return {"total": len(entradas), "entradas": entradas}
-
-from fastapi import Query
+@app.post("/symctx/similares")
+def buscar_similares(data: TextoEntrada, _: str = Depends(verificar_token)):
+    similares, _ = buscar_similares_emb(data.texto, top_n=data.top_n)
+    return {"similares": [{"id": s[1], "texto": s[2], "distancia": s[0]} for s in similares]}
 
 @app.post("/symctx/narrative")
-def narrativa_ia(limit: int = Query(default=40, ge=1, le=200)):
-    from termux_backend.modules.modulo_symcontext.api.core_symctx import obtener_todas_las_entradas
-    entries = obtener_todas_las_entradas(limit=limit)
+def narrativa_ia(_: str = Depends(verificar_token)):
+    entries = obtener_todas_las_entradas()
     if not entries:
         return {"error": "No hay entradas registradas"}
     analisis = analizar_narrativa(entries)
-    return {"analisis": analisis, "usadas": len(entries)}
+    return {"analisis": analisis}
 
 @app.post("/symctx/transitions")
-def transiciones_ia(limit: int = Query(default=60, ge=1, le=200)):
-    from termux_backend.modules.modulo_symcontext.api.core_symctx import obtener_todas_las_entradas
-    entries = obtener_todas_las_entradas(limit=limit)
+def transiciones_ia(_: str = Depends(verificar_token)):
+    entries = obtener_todas_las_entradas()
     if not entries:
         return {"error": "No hay entradas registradas"}
     analisis = analizar_transiciones(entries)
-    return {"analisis": analisis, "usadas": len(entries)}
+    return {"analisis": analisis}
 
 @app.post("/symctx/find_related")
-def simbolicos_relacionados(data: TextoEntrada):
-    from termux_backend.modules.modulo_symcontext.api.core_symctx import obtener_todas_las_entradas
-    entradas = obtener_todas_las_entradas()
-    
-    # Buscar entrada base que contenga el texto (última coincidencia)
-    base = next((e for e in reversed(entradas) if data.texto.lower() in e['texto'].lower()), None)
+def simbolicos_relacionados(data: TextoEntrada, _: str = Depends(verificar_token)):
+    base = obtener_todas_las_entradas(data.texto)
     if not base:
-        return {"error": "No se encontró entrada base con ese texto"}
-    
-    similares, _ = buscar_similares_emb(data.texto)
+        return {"error": "No se encontró entrada base"}
+    similares, _ = buscar_similares_emb(data.texto, top_n=data.top_n)
     analisis = analizar_similares(base, [{"id": s[1], "texto": s[2]} for s in similares])
     return {
         "base_id": base["id"],
         "analisis": analisis,
-        "similares_encontrados": len(similares)
+        "similares_ids": [s[1] for s in similares]
     }
 
-@app.post("/symctx/similares")
-def buscar_similares(data: TextoEntrada):
-    similares, _ = buscar_similares_emb(data.texto)
-    return {"similares": [{"id": s[1], "texto": s[2], "distancia": s[0]} for s in similares]}
+@app.get("/symctx/view")
+def obtener_entradas(_: str = Depends(verificar_token)):
+    entradas = obtener_todas_las_entradas()
+    return {"entradas": entradas}
 
+@app.get("/symctx/config")
+def ver_config(_: str = Depends(verificar_token)):
+    return SYM_CFG
