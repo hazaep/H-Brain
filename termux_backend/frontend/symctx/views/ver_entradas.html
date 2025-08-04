@@ -10,19 +10,36 @@
   <h2>📚 Entradas registradas</h2>
   <ul id="entradas"></ul>
   <script>
-    async function cargarEntradas() {
-      const res = await fetch('/symctx/view', {
-        headers: { 'Authorization': `Bearer ${window.apiToken}` }
+  document.addEventListener("DOMContentLoaded", async () => {
+    const token = window.apiToken;
+
+    try {
+      const res = await fetch("/symctx/view?limit=20", {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
       });
-      const json = await res.json();
-      const lista = document.getElementById('entradas');
-      json.entradas.forEach(e => {
-        const li = document.createElement('li');
-        li.textContent = `${e.timestamp}: ${e.texto}`;
+
+      if (!res.ok) {
+        const error = await res.json();
+        document.getElementById("result").innerHTML = `<pre>Error: ${error.detail}</pre>`;
+        return;
+      }
+
+      const data = await res.json();
+      const lista = document.getElementById("entradas");
+      lista.innerHTML = "";
+
+      data.entradas.forEach((e) => {
+        const li = document.createElement("li");
+        li.textContent = `[${e.fecha || e.created_at}] ${e.texto}`;
         lista.appendChild(li);
       });
+    } catch (err) {
+      document.getElementById("result").innerHTML = `<pre>Error de red: ${err.message}</pre>`;
     }
-    cargarEntradas();
-  </script>
+  });
+</script>
 </body>
 </html>
