@@ -110,3 +110,47 @@ def buscar_similares(data: TextoEntrada, _: str = Depends(verificar_token)):
 def ver_config(_: str = Depends(verificar_token)):
     return SYM_CFG
 
+#from fastapi.staticfiles import StaticFiles
+
+#app.mount("/", StaticFiles(directory="termux_backend/frontend/symctx", html=True), name="frontend")
+
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
+from pathlib import Path
+
+# Ruta base del frontend
+frontend_path = Path(__file__).resolve().parents[3] / "frontend" / "symctx"
+
+# Servir archivos estáticos
+app.mount("/symctx/css", StaticFiles(directory=frontend_path / "css"), name="css")
+app.mount("/symctx/js", StaticFiles(directory=frontend_path / "js"), name="js")
+
+# Cargar plantillas HTML
+templates = Jinja2Templates(directory=str(frontend_path / "views"))
+
+# Rutas HTML (Frontend)
+
+@app.get("/", response_class=HTMLResponse)
+def home(request: Request):
+    return templates.TemplateResponse("dashboard.html", {"request": request})
+
+@app.get("/symctx/registrar", response_class=HTMLResponse)
+def vista_registrar(request: Request):
+    return templates.TemplateResponse("registrar.html", {"request": request})
+
+@app.get("/symctx/view", response_class=HTMLResponse)
+def vista_entradas(request: Request):
+    return templates.TemplateResponse("ver_entradas.html", {"request": request})
+
+@app.get("/symctx/narrative", response_class=HTMLResponse)
+def vista_narrativa(request: Request):
+    return templates.TemplateResponse("narrativa.html", {"request": request})
+
+@app.get("/symctx/transitions", response_class=HTMLResponse)
+def vista_transiciones(request: Request):
+    return templates.TemplateResponse("transiciones.html", {"request": request})
+
+@app.get("/symctx/find_related", response_class=HTMLResponse)
+def vista_find_related(request: Request):
+    return templates.TemplateResponse("find_related.html", {"request": request})

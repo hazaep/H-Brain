@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Ver entradas</title>
+  <link rel="stylesheet" href="/symctx/css/style.css">
+  <script src="/symctx/js/token.js" defer></script>
+</head>
+<body>
+  <h2>📚 Entradas registradas</h2>
+  <ul id="entradas"></ul>
+  <script>
+    async function cargarEntradas() {
+      const res = await fetch('/symctx/view', {
+        headers: { 'Authorization': `Bearer ${window.apiToken}` }
+      });
+      const json = await res.json();
+      const lista = document.getElementById('entradas');
+      json.entradas.forEach(e => {
+        const li = document.createElement('li');
+        li.textContent = `${e.timestamp}: ${e.texto}`;
+        lista.appendChild(li);
+      });
+    }
+    cargarEntradas();
+  </script>
+</body>
+</html>
