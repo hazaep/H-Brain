@@ -7,9 +7,9 @@ def clasificar_input(user_input):
 Eres un clasificador simbólico que analiza frases introspectivas o pensamientos y sugiere:
 
 1. Propósito (un solo vocablo ejemplos: explorar, desahogo, insight, pregunta, otro)
-2. Identidad que habla (un solo vocabloej emplos: niño, observador, estratega, instintivo, otro)
+2. Identidad que habla (un solo vocablo emplos: niño, observador, estratega, instintivo, otro)
 3. Tipo de tensión (un solo vocablo ejemplos: mental, emocional, creativa, somática, ninguna, otra)
-4. Emoción principal (un solo vocablo ejemplos: miedo, tristeza, enojo, alegría, sorpresa, calma, otra)
+4. Emoción principal (un solo vocablo, debe ser una emocion valida ejemplos: miedo, tristeza, enojo, alegría, sorpresa, calma, otra)
 5. Tags (palabras clave separadas por coma, cantidad razonable)
 
 Frase:

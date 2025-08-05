@@ -18,7 +18,7 @@
   "clarai_extra_slots": 5,
   "clarai_max_memories": 5,
   "clarai_max_tokens": 7000,
-  "debug": false,
+  "debug": true,
 
   "neurobank": {
     "nb_db_path": "termux_backend/database/neurobank_vault.db",
@@ -28,7 +28,9 @@
   },
 
   "symcontext": {
+    "api_token": "sym-6565900705",
     "sym_db_path": "termux_backend/database/context.db",
-    "graph_output_dir": "/data/data/com.termux/files/home/H-Brain/termux_backend/database/graphs"
+    "graph_output_dir": "/data/data/com.termux/files/home/H-Brain/termux_backend/database/graphs",
+    "related_output_dir": "/data/data/com.termux/files/home/H-Brain/termux_backend/database/related"
   }
 }

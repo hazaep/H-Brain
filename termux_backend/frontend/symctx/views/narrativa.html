@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Análisis narrativo</title>
+  <link rel="stylesheet" href="/symctx/css/style.css">
+  <script src="/symctx/js/token.js" defer></script>
+</head>
+<body>
+  <h2>🧠 Bloques narrativos</h2>
+  <button onclick="analizar()">Iniciar análisis</button>
+  <pre id="resultado"></pre>
+  <script>
+    async function analizar() {
+      const res = await fetch('/symctx/narrative', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${window.apiToken}` }
+      });
+      const json = await res.json();
+      document.getElementById('resultado').textContent = JSON.stringify(json, null, 2);
+    }
+  </script>
+</body>
+</html>

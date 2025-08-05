@@ -49,7 +49,7 @@ sys.path.insert(0, str(BASE_DIR / "modules" / "modulo_symcontext"))
 from termux_backend.database.verify_or_init_db import cargar_schema_si_falta
 from termux_backend.modules.modulo_tools.utils import get_settings
 from termux_backend.modules.modulo_ai.ai_router import chat, embed
-
+from docs.cheatsheet import mostrar_cheat_sheet
 from utils.input import save_input
 from utils.semantic_search import buscar_similares_emb
 from utils.view_entries import main as view_entries_main
@@ -62,6 +62,7 @@ from analysis.find_related import encontrar_relaciones_semanticas
 def ejecutar_menu_interactivo():
     opciones = [
         ("Registrar nuevo input", "registrar"),
+        ("Buscar relaciones simbólicas [IA]", "find_related"),
         ("Ver entradas", "view"),
         ("Buscar entradas similares", "similares"),
         ("Generar grafo semántico", "grafo"),
@@ -71,7 +72,6 @@ def ejecutar_menu_interactivo():
         ("Verificar base de datos", "verificar_db"),
         ("Probar funciones de IA", "test_ai"),
         ("Ver configuración actual", "config"),
-        ("Buscar relaciones simbólicas", "find_related"),
         ("Salir", "salir"),
     ]
 
@@ -140,6 +140,9 @@ def ejecutar_comando(comando, args=None):
 
     elif comando == "verificar_db":
         cargar_schema_si_falta()
+    
+    elif comando == "cheat":
+        mostrar_cheat_sheet()
 
     elif comando == "test_ai":
         print("🤖 Probando función chat()")
@@ -208,6 +211,7 @@ def main():
     sub_sim.add_argument("texto", help="Texto de referencia")
     sub_sim.add_argument("--top", type=int, default=5, help="Número de similares")
 
+    sub.add_parser("cheat", help="Mostrar guía rápida de comandos")
     sub.add_parser("view", help="Ver todas las entradas o filtrar")
     sub.add_parser("verificar_db", help="Crear/actualizar tablas de DB")
     sub.add_parser("test_ai", help="Probar router AI (chat/embed)")

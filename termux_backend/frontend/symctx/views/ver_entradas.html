@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Ver entradas</title>
+  <link rel="stylesheet" href="/symctx/css/style.css">
+  <script src="/symctx/js/token.js" defer></script>
+</head>
+<body>
+  <h2>📚 Entradas registradas</h2>
+  <ul id="entradas"></ul>
+  <script>
+  document.addEventListener("DOMContentLoaded", async () => {
+    const token = window.apiToken;
+
+    try {
+      const res = await fetch("/symctx/view?limit=20", {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        document.getElementById("result").innerHTML = `<pre>Error: ${error.detail}</pre>`;
+        return;
+      }
+
+      const data = await res.json();
+      const lista = document.getElementById("entradas");
+      lista.innerHTML = "";
+
+      data.entradas.forEach((e) => {
+        const li = document.createElement("li");
+        li.textContent = `[${e.fecha || e.created_at}] ${e.texto}`;
+        lista.appendChild(li);
+      });
+    } catch (err) {
+      document.getElementById("result").innerHTML = `<pre>Error de red: ${err.message}</pre>`;
+    }
+  });
+</script>
+</body>
+</html>

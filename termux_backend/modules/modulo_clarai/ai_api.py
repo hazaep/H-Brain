@@ -47,14 +47,14 @@ Criterios:
 1. Relevancia >7.0 para considerar almacenamiento (10.0 es crítico, 0.0 irrelevante)
 2. Categorías disponibles: {items}
 
-Comandos válidos (uno o varios):
+Comandos válidos (maximo 5, separados por coma [,]):
 - add: Mem: [resumen] Cat: [categoría] Relevancia: [X.X]
 - del: [id]
 - rew: [id] Mem: [...] Cat: [...] Relevancia: [X.X]
-- find: [palabras clave]
+- find: [palabras clave] # find out of service
 - esc:
 
-🟡 IMPORTANTE: Siempre responde en formato JSON[RELEVANCIA: 10.0]:
+🟡 IMPORTANTE: Siempre responde en formato JSON:
 {{
   "respuesta": "texto de respuesta al usuario",
   "comando": [ "comando1", "comando2", ... ]

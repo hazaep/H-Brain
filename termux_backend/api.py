@@ -1,28 +1,26 @@
-# api.py
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from termux_backend.modules.modulo_symcontext.api.api_symctx import app as symctx_app
 
-from flask import Flask, request, jsonify
-from core import AutomationCore
+# Crear app principal
+app = FastAPI(title="H-Brain API")
 
-app = Flask(__name__)
-core = AutomationCore()
+# Middleware CORS (para frontend web)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # puedes restringir esto luego
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-@app.route("/execute", methods=["POST"])
-def execute():
-    data = request.get_json()
-    module = data.get("module")
-    command = data.get("command")
-    kwargs = data.get("args", {})
+# Montar la API de SymContext en /symctx/
+app.mount("/", symctx_app)
 
-    result = core.execute_command(module, command, **kwargs)
-    return jsonify(result)
-
-@app.route("/status", methods=["GET"])
-def status():
-    return jsonify({"status": "H-Brain backend is running ✅"})
-
-@app.route("/")
-def home():
-    return {"mensaje": "¡Hola desde H-Brain!"}
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=7860, debug=True)
+# Ruta base informativa
+@app.get("/")
+def root():
+    return {
+        "mensaje": "🚀 API central de H-Brain en ejecución",
+        "modulos_activos": ["/symctx"]
+    }
