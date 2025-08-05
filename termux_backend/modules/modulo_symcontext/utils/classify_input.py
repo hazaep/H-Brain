@@ -36,7 +36,7 @@ Devuelve en formato JSON así:
                 funcion="termux_backend.modules.modulo_symcontext.utils.classify_input: clasificar_input",
                 entrada=user_input,
                 salida=result,
-                input_id=None,
+                input_id="N/A",
                 crypto="SYNAP"
             )
             return result

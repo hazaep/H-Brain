@@ -30,7 +30,7 @@ def tag_input(user_input):
             funcion="termux_backend.modules.modulo_symcontext.utils.input : tag_input",
             entrada=user_input,
             salida=clasificacion,
-            input_id=None,
+            input_id="N/A",
             crypto="SYNAP"
         )
         return (
@@ -49,7 +49,7 @@ def tag_input(user_input):
 #    return purpose, identity, tension, tags
 
 
-def save_input(texto, generar_grafo=True):
+def save_input(texto, generar_grafo=False):
     if not texto.strip():
         print("⚠️ Entrada vacía. No se guardó nada.")
         return None  # ← Esto evita que retorne None sin control
@@ -97,7 +97,7 @@ def save_input(texto, generar_grafo=True):
             module="SymContext",
             action=f"Registrar: ID[{last_id}] {texto}",
             funcion="termux_backend.modules.modulo_symcontext.utils.input : save_input",
-            entrada=user_input,
+            entrada=texto,
             salida=output,
             input_id=f"SYM-{last_id}",
             crypto="SYMCOIN"
@@ -105,8 +105,8 @@ def save_input(texto, generar_grafo=True):
         metadata_nft(
             module="SymContext",
             input_id=f"SYM-{last_id}",
-            funcion="termux_backend.modules.modulo_symcontext.utils.input : save_input",,
-            entrada=user_input,
+            funcion="termux_backend.modules.modulo_symcontext.utils.input : save_input",
+            entrada=texto,
             salida=output,
             title=texto,
             crypto="neuroNFT"

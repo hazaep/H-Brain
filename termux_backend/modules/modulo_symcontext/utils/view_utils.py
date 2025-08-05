@@ -34,4 +34,13 @@ def obtener_todas_las_entradas(limit: int = None) -> list:
         }
         for row in rows
     ]
+    metadata_token(
+        module="SymContext",
+        action=f"Cargar entradas - Total: {len(entradas)}",
+        funcion="termux_backend.modules.modulo_symcontext.utils.view_utils : obtener_todas_las_entradas",
+        entrada=limit,
+        salida=f"Se cargaron {len(entradas)} entradas",
+        input_id="N/A",
+        crypto="SYNAP"
+    )
     return entradas

@@ -3,9 +3,8 @@ import json
 import sqlite3
 import numpy as np
 from termux_backend.modules.modulo_symcontext.utils.embedding import obtener_embedding
-from termux_backend.modules.modulo_tools.utils import get_settings # get_db_path
-
-# DB_PATH = get_db_path()
+from termux_backend.modules.modulo_tools.utils import get_settings
+from termux_backend.modules.modulo_tools.bank_metadata import metadata_token
 
 # Cargar configuración del módulo NeuroBank
 _cfg = get_settings()
@@ -27,6 +26,16 @@ def cargar_embeddings():
                 entradas.append((id_, texto, vect))
         except Exception as e:
             print(f"⚠️ Error cargando embedding ID {id_}: {e}")
+    metadata_token(
+        module="SymContext",
+        action=f"Cargar embeddings - Total: {len(entradas)}",
+        funcion="termux_backend.modules.modulo_symcontext.utils.semantic_search : cargar_embeddings",
+        entrada="N/A",
+        salida=f"Se cargaron {len(entradas)} entradas",
+        input_id="N/A",
+        crypto="SYNAP"
+    )
+
     return entradas
 
 def distancia_coseno(v1, v2):
@@ -51,12 +60,31 @@ def buscar_similares_emb(input_texto, top_n=6, embedding_ref=None):
     for id_, texto, emb in entradas:
         dist = distancia_coseno(embedding_ref, emb)
         ranking.append((dist, id_, texto))
+    metadata_token(
+        module="SymContext",
+        action=f"Verificacion de distancias por coseno",
+        funcion="termux_backend.modules.modulo_symcontext.utils.semantic_search : distancia_coseno",
+        entrada=f"Se calcularon {len(embedding_ref)} entradas",
+        salida=f"Se verifica la distancia por cosenos para {len(ranking)} elementos",
+        input_id="N/A",
+        crypto="SYNAP"
+    )
 
     ranking.sort()
     print(f"\n🔎 Más similares a: {input_texto}\n")
     for dist, id_, texto in ranking[:top_n]:
         print(f"⟪ Entrada #{id_} ⟫ — Distancia: {round(dist, 4)}")
         print("💬", texto[:190], "...\n")
+    metadata_token(
+        module="SymContext",
+        action=f"Buscar Similares por enbedding de: {input_texto}",
+        funcion="termux_backend.modules.modulo_symcontext.utils.semantic_search : buscar_similares_emb",
+        entrada=f"Input: {input_texto}\nRef: {len(embedding_ref)}",
+        salida=ranking[:top_n],
+        input_id="N/A",
+        crypto="SYNAP"
+    )
+
     return ranking[:top_n], embedding_ref
 
 if __name__ == "__main__":

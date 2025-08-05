@@ -38,8 +38,8 @@ def obtener_embedding(texto):
                 action=f"Embedding: {texto}",
                 funcion="termux_backend.modules.modulo_symcontext.utils.embedding : obtener_embedding",
                 entrada=texto,
-                salida=embedding,
-                input_id=None,
+                salida=f"Embedding Len: {len(embedding)}",
+                input_id="N/A",
                 crypto="SYNAP"
             )
             return embedding
@@ -59,8 +59,8 @@ def obtener_embedding(texto):
             action=f"Embedding: {texto}",
             funcion="termux_backend.modules.modulo_symcontext.utils.embedding : obtener_embedding",
             entrada=texto,
-            salida=embedding,
-            input_id=None,
+            salida=f"Embedding Len: {len(embedding)}",
+            input_id="N/A",
             crypto="SYNAP"
         )
         return embedding

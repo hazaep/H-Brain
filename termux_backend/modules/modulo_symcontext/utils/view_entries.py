@@ -1,7 +1,8 @@
 import os
 import json
 import sqlite3
-from termux_backend.modules.modulo_tools.utils import get_settings  # get_db_path
+from termux_backend.modules.modulo_tools.utils import get_settings
+from termux_backend.modules.modulo_tools.bank_metadata import metadata_token
 
 # Cargar configuración del módulo NeuroBank
 _cfg = get_settings()
@@ -30,6 +31,17 @@ def mostrar_entradas(filtro_col=None, filtro_val=None):
     conn.close()
 
     if entradas:
+        metadata_token(
+            module="SymContext",
+            action=f"Mostrar entradas",
+            funcion="termux_backend.modules.modulo_symcontext.utils.view_entries : mostrar_entradas",
+            entrada=f"Columna: {filtro_col}\nValor: {filtri_val}",
+            salida=f"Se cargaron {len(entradas)} entradas",
+            input_id="N/A",
+            crypto="SYNAP"
+        )
+
+
         for id_, texto, timestamp, purpose, identity, tension, tags in entradas:
             print(f"───⟪ Entrada #{id_} ⟫───")
             print("🕛", timestamp)
