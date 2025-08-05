@@ -1,6 +1,7 @@
 import os
 import json
 from termux_backend.modules.modulo_ai.ai_router import chat
+from termux_backend.modules.modulo_tools.bank_metadata import metadata_token
 
 def clasificar_input(user_input):
     prompt_base = f"""
@@ -29,6 +30,15 @@ Devuelve en formato JSON así:
         respuesta = chat(prompt_base)
         result = json.loads(respuesta.strip())
         if all(k in result for k in ("purpose", "identity_mode", "tension", "emotion", "tags")):
+            metadata_token(
+                module="SymContext",
+                action=f"Clasificar: {user_input} Clasificacion: {result}",
+                funcion="termux_backend.modules.modulo_symcontext.utils.classify_input: clasificar_input",
+                entrada=user_input,
+                salida=result,
+                input_id=None,
+                crypto="SYNAP"
+            )
             return result
         else:
             print("❌ Respuesta incompleta del modelo:", result)

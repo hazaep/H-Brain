@@ -3,9 +3,8 @@ import json
 import math
 import sqlite3
 from termux_backend.modules.modulo_ai.ai_router import embed
-from termux_backend.modules.modulo_tools.utils import get_settings  # get_db_path
-
-#DB_PATH = get_db_path()
+from termux_backend.modules.modulo_tools.utils import get_settings
+from termux_backend.modules.modulo_tools.bank_metadata import metadata_token
 
 # Cargar configuración del módulo NeuroBank
 _cfg = get_settings()
@@ -34,6 +33,15 @@ def obtener_embedding(texto):
         if resultado and resultado[0]:
             print("🧠 Embedding existente encontrado en base de datos.")
             embedding = [float(x) for x in resultado[0].split(",")]
+            metadata_token(
+                module="SymContext",
+                action=f"Embedding: {texto}",
+                funcion="termux_backend.modules.modulo_symcontext.utils.embedding : obtener_embedding",
+                entrada=texto,
+                salida=embedding,
+                input_id=None,
+                crypto="SYNAP"
+            )
             return embedding
 
         print("✨ Generando nuevo embedding...")
@@ -46,6 +54,15 @@ def obtener_embedding(texto):
         cursor.execute("UPDATE context_entries SET embedding = ? WHERE input_text = ?", (embedding_str, texto))
         conn.commit()
         print("💾 Embedding generado y guardado.")
+        metadata_token(
+            module="SymContext",
+            action=f"Embedding: {texto}",
+            funcion="termux_backend.modules.modulo_symcontext.utils.embedding : obtener_embedding",
+            entrada=texto,
+            salida=embedding,
+            input_id=None,
+            crypto="SYNAP"
+        )
         return embedding
 
     except Exception as e:

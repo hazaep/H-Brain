@@ -1,9 +1,12 @@
 {
-    "costo": 2020,
+    "costo": 2024,
     "ultimo_balance": 0,
     "no_reclamados": {},
     "dev": {
         "DEVCOIN": 2,
         "devNFT": 2
+    },
+    "SymContext": {
+        "SYNAP": 4
     }
 }

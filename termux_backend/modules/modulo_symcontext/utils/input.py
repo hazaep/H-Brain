@@ -5,10 +5,8 @@ from datetime import datetime
 from termux_backend.modules.modulo_symcontext.utils.classify_input import clasificar_input
 from termux_backend.modules.modulo_symcontext.utils.semantic_search import buscar_similares_emb
 from termux_backend.modules.modulo_symcontext.analysis.graph_builder import generar_grafo_contextual
-from termux_backend.modules.modulo_tools.utils import get_settings  #, get_db_path, get_log_path
-
-# DB_PATH = get_db_path()
-# LOG_PATH = get_log_path("user_inputs.log")
+from termux_backend.modules.modulo_tools.utils import get_settings
+from termux_backend.modules.modulo_tools.bank_metadata import metadata_token, metadata_nft
 
 # Cargar configuración del módulo SymContext
 _cfg = get_settings()
@@ -26,6 +24,15 @@ def tag_input(user_input):
         for clave, valor in clasificacion.items():
             print(f"{clave}: {valor}")
 #        if input("¿Aceptar estas categorías? (s/n): ").lower() == "s":
+        metadata_token(
+            module="SymContext",
+            action=f"Clasificar: {user_input} Clasificacion: {clasificacion}",
+            funcion="termux_backend.modules.modulo_symcontext.utils.input : tag_input",
+            entrada=user_input,
+            salida=clasificacion,
+            input_id=None,
+            crypto="SYNAP"
+        )
         return (
             clasificacion['purpose'],
             clasificacion['identity_mode'],
@@ -41,9 +48,6 @@ def tag_input(user_input):
 #    tags = input("Etiquetas sueltas (opcional, coma separadas): ")
 #    return purpose, identity, tension, tags
 
-def log_input(texto):
-    with open(LOG_PATH, "a") as f:
-        f.write(f"{datetime.now().isoformat()} | {texto}\n")
 
 def save_input(texto, generar_grafo=True):
     if not texto.strip():
@@ -79,6 +83,34 @@ def save_input(texto, generar_grafo=True):
             path_grafo = generar_grafo_contextual()
             print(f"📍 Gráfico actualizado en:\n{path_grafo}")
 
+        output = {
+            "id": last_id,
+            "texto": texto,
+            "purpose": purpose,
+            "identity_mode": identity_mode,
+            "tension": tension,
+            "emotion": emotion,
+            "tags": tags,
+            "grafo_path": path_grafo
+        }
+        metadata_token(
+            module="SymContext",
+            action=f"Registrar: ID[{last_id}] {texto}",
+            funcion="termux_backend.modules.modulo_symcontext.utils.input : save_input",
+            entrada=user_input,
+            salida=output,
+            input_id=f"SYM-{last_id}",
+            crypto="SYMCOIN"
+        )
+        metadata_nft(
+            module="SymContext",
+            input_id=f"SYM-{last_id}",
+            funcion="termux_backend.modules.modulo_symcontext.utils.input : save_input",,
+            entrada=user_input,
+            salida=output,
+            title=texto,
+            crypto="neuroNFT"
+        )
         # Retornar diccionario con datos clave
         return {
             "id": last_id,
