@@ -7,7 +7,9 @@ def main():
         sys.exit(1)
     user, conv, *msg = sys.argv[1:]
 #    print(send_message(user, int(conv), " ".join(msg)))
-    answer, raw_comandos=send_message(user, int(conv), " ".join(msg))
+    answer, raw_comandos, reasoning=send_message(user, int(conv), " ".join(msg))
+    print(f"___[RAZONAMIENTO]_________________________________\n{reasoning}")
+
     print(f"\n\n [ &Clarai> ] {answer}\n")
     n_com = 0
     print("___[IA-CLI]_______________________________________")

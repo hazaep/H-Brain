@@ -1,4 +1,5 @@
 import os, json, requests
+from openai import OpenAI
 from termux_backend.modules.modulo_clarai import history, memory
 from termux_backend.utils.debug import log_debug
 # Si decides usar el enrutador de modulo_ai:
@@ -87,14 +88,27 @@ def send_message(username, conv_id, user_input):
 #    print(system)
     log_debug(system)
     # Enviar a la API (o router si usas uno)
-    payload = {'model': MODEL, 'messages': messages, 'temperature': TEMP, 'max_tokens': MAX_TOK}
-    headers = {'Authorization': f'Bearer {get_api_key()}', 'Content-Type': 'application/json'}
-    resp = requests.post(API_URL, headers=headers, json=payload)
-
-    if resp.status_code != 200:
-        return f"[Error {resp.status_code}] {resp.text}"
-
-    content = resp.json()['choices'][0]['message']['content']
+#    payload = {'model': MODEL, 'messages': messages, 'response_format': {'tipe': 'json_objet'}, 'temperature': TEMP, 'max_tokens': MAX_TOK}
+#    headers = {'Authorization': f'Bearer {get_api_key()}', 'Content-Type': 'application/json'}
+#    resp = requests.post(API_URL, headers=headers, json=payload)
+    client = OpenAI(
+        api_key=f'{get_api_key()}',
+        base_url='https://api.deepseek.com',
+    )
+    resp = client.chat.completions.create(
+        model=MODEL,
+        messages=messages,
+        max_tokens=MAX_TOK,
+        response_format={
+            'type': 'json_object'
+        },
+        temperature=TEMP
+    )
+#    if resp.error:
+#    if resp.status_code != 200:
+#        return f"[Error {resp.error}] {resp.text}"
+    reasoning = resp.choices[0].message.reasoning_content
+    content = resp.choices[0].message.content
 
     # Soportar simulación con dict o respuesta real como str
     if isinstance(content, dict):
@@ -103,7 +117,8 @@ def send_message(username, conv_id, user_input):
         content = content.strip()
         if not content.startswith("{"):
             history.add_message(conn, conv_id, 'assistant', content)
-            return content
+            raw_comandos = ""
+            return content, raw_comandos, reasoning
         try:
             data = json.loads(content)
         except json.JSONDecodeError:
@@ -143,4 +158,4 @@ def send_message(username, conv_id, user_input):
         # find y esc no requieren ejecución directa
 
     history.add_message(conn, conv_id, 'assistant', answer)
-    return answer, raw_comandos
+    return answer, raw_comandos, reasoning

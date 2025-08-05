@@ -11,14 +11,14 @@
   "neurobank_db_path": "termux_backend/database/neurobank_vault.db",
   "clarai_history_db_path": "termux_backend/database/ai_history.db",
   "clarai_memory_db_path": "termux_backend/database/clarai_memory.db",
-  "clarai_model": "deepseek-chat",
+  "clarai_model": "deepseek-reasoner",
   "clarai_api_url": "https://api.deepseek.com/v1/chat/completions",
   "clarai_temperature": 1.3,
-  "clarai_memory_categories": ["proyectos", "Clarai", "usuario", "aprendizaje"],
+  "clarai_memory_categories": ["proyectos", "usuario", "aprendizaje"],
   "clarai_extra_slots": 5,
   "clarai_max_memories": 5,
-  "clarai_max_tokens": 7000,
-  "debug": true,
+  "clarai_max_tokens": 20000,
+  "debug": false,
 
   "neurobank": {
     "nb_db_path": "termux_backend/database/neurobank_vault.db",
