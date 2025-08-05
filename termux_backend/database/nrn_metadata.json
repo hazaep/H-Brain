@@ -1,5 +1,5 @@
 {
-    "costo": 2024,
+    "costo": 3128,
     "ultimo_balance": 0,
     "no_reclamados": {},
     "dev": {
@@ -7,6 +7,8 @@
         "devNFT": 2
     },
     "SymContext": {
-        "SYNAP": 4
+        "SYNAP": 98,
+        "SYMCOIN": 1,
+        "neuroNFT": 1
     }
 }
