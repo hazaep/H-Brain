@@ -1,11 +1,12 @@
 import os, sqlite3, json, re
-from termux_backend.utils.debug import log_debug
+from termux_backend.modules.modulo_tools.utils import get_settings
 
-_cfg = json.load(open(os.path.expanduser("~/H-Brain/configs/settings.json")))
-_MEM_DB = os.path.join(_cfg["base_dir"], _cfg["clarai_memory_db_path"])
-CATS = _cfg["clarai_memory_categories"]  # ["proyectos","Clarai","usuario","aprendizaje"]
-MAX = _cfg["clarai_max_memories"]  #20
-EXT_SLT = _cfg["clarai_extra_slots"]  #5
+_cfg = get_settings()
+CLARAI_CFG = _cfg.get("clarai", {})
+_MEM_DB = os.path.expanduser(CLARAI_CFG.get("memory_db_path", "termux_backend/database/clarai_memory.db"))
+CATS = CLARAI_CFG.get("memory_categories", ["proyectos", "usuario", "aprendizaje"])
+EXT_SLT = CLARAI_CFG.get("extra_slots", 5)
+MAX = CLARAI_CFG.get("max_memories", 5)
 
 def init_memory_db():
     conn = sqlite3.connect(_MEM_DB)
@@ -87,7 +88,6 @@ def search_memories(conn, user_id, keyword, limit=EXT_SLT):
 
 def process_memory_command(cmd_str):
     """Parsea add:/del:/rew:/find:/esc:"""
-    log_debug(f"Recibido para parsear: {cmd_str}")
     cmd_str = cmd_str.strip()
     try:
         if cmd_str.startswith("add:"):
@@ -116,3 +116,4 @@ def process_memory_command(cmd_str):
     except:
         return None
     return None
+

@@ -8,14 +8,14 @@ def main():
     user, conv, *msg = sys.argv[1:]
 #    print(send_message(user, int(conv), " ".join(msg)))
     answer, raw_comandos, reasoning=send_message(user, int(conv), " ".join(msg))
-    print(f"___[RAZONAMIENTO]_________________________________\n{reasoning}")
+    print(f"\n___[RAZONAMIENTO]________________________________\n{reasoning}")
 
-    print(f"\n\n [ &Clarai> ] {answer}\n")
+    print(f"_________________________________________________\n [ &Clarai> ] {answer}\n")
     n_com = 0
-    print("___[IA-CLI]_______________________________________")
+    print("___[IA-CLI]_____________________________________")
     for c in raw_comandos:
         print(f" [ &Clarai> {c}]")
-    print(f"_________________________________[{user} CLI]: [✓]\n\n")
+    print(f"______________________________[{user} CLI]: [✓]\n\n")
 
 
 if __name__ == "__main__":

@@ -1,8 +1,10 @@
 import os, sqlite3, json
+from termux_backend.modules.modulo_tools.utils import get_settings
 
 # Cargar configuración
-_cfg = json.load(open(os.path.expanduser("~/H-Brain/configs/settings.json")))
-_HIST_DB = os.path.join(_cfg["base_dir"], _cfg["clarai_history_db_path"])
+_cfg = get_settings()
+CLARAI_CFG = _cfg.get("clarai", {})
+_HIST_DB = os.path.expanduser(CLARAI_CFG.get("history_db_path", "termux_backend/database/ai_history.db"))
 
 def init_history_db():
     conn = sqlite3.connect(_HIST_DB)

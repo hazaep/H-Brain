@@ -1,18 +1,19 @@
 import os, json, requests
 from openai import OpenAI
 from termux_backend.modules.modulo_clarai import history, memory
-from termux_backend.utils.debug import log_debug
-# Si decides usar el enrutador de modulo_ai:
-# from termux_backend.modules.modulo_ai.ai_router import route_request
+# from termux_backend.modules.modulo_ai.ai_router - PENDIENTE
+from termux_backend.modules.modulo_tools.utils import get_settings
 
-_cfg      = json.load(open(os.path.expanduser("~/H-Brain/configs/settings.json")))
-API_URL   = _cfg["clarai_api_url"]
-MODEL     = _cfg["clarai_model"]
-TEMP      = _cfg["clarai_temperature"]
-KEY_PATH  = _cfg["deepseek_key_path"]
-CATS      = _cfg["clarai_memory_categories"]
-MAX_TOK   = _cfg["clarai_max_tokens"]
-
+_cfg = get_settings()
+CLARAI_CFG = _cfg.get("clarai", {})
+MODEL = CLARAI_CFG.get("model", "deepseek-reasoner")
+API_URL = CLARAI_CFG.get("api_url", "https://api.deepseek.com")
+TEMP = CLARAI_CFG.get("temperature", 1.3)
+CATS = CLARAI_CFG.get("memory_categories", ["proyectos", "usuario", "aprendizaje"])
+MAX_TOK = CLARAI_CFG.get("max_tokens", 20000)
+KEY_PATH = os.path.expanduser(CLARAI_CFG.get("ai_key_path", "configs/secrets/deepseek_key.txt"))
+ESPECIALIZACION = CLARAI_CFG.get("especializacion", "Exploración y teoria")
+# Obtener clave desde archivo
 def get_api_key():
     return open(os.path.expanduser(KEY_PATH)).read().strip()
 
@@ -26,11 +27,10 @@ def build_system_prompt(username, memories, items, search_results=None):
     print("\n\n_____[CLARIUM]_____________________________")
     for l in lines:
         print(l)
-    print("\n___________________________________________")
     return f"""Eres Clarai, asistente de IA creada por Hazael. Usuario: {username}
 
 Especialización actual:
-1.- Exploración teórica
+1.- {ESPECIALIZACION}
 
 Reglas:
 - Ajustar estilo según historial
@@ -41,7 +41,6 @@ Evalúa cada interacción y decide si:
 - Agregar memoria nueva (add): ¿Es información útil a largo plazo?
 - Eliminar memoria (del): ¿Ha perdido relevancia?
 - Modificar (rew): ¿Requiere actualización?
-- Buscar (find): ¿Necesitas contexto histórico?
 - Omitir (esc): ¿No es memorable?
 
 Criterios:
@@ -52,7 +51,6 @@ Comandos válidos (maximo 5, separados por coma [,]):
 - add: Mem: [resumen] Cat: [categoría] Relevancia: [X.X]
 - del: [id]
 - rew: [id] Mem: [...] Cat: [...] Relevancia: [X.X]
-- find: [palabras clave] # find out of service
 - esc:
 
 🟡 IMPORTANTE: Siempre responde en formato JSON:
@@ -85,15 +83,13 @@ def send_message(username, conv_id, user_input):
     # Preparar prompt
     system = build_system_prompt(username, top, CATS, search)
     messages = [{"role":"system","content":system}] + history_msgs
-#    print(system)
-    log_debug(system)
-    # Enviar a la API (o router si usas uno)
+    # Enviar a la API (o router)
 #    payload = {'model': MODEL, 'messages': messages, 'response_format': {'tipe': 'json_objet'}, 'temperature': TEMP, 'max_tokens': MAX_TOK}
 #    headers = {'Authorization': f'Bearer {get_api_key()}', 'Content-Type': 'application/json'}
 #    resp = requests.post(API_URL, headers=headers, json=payload)
     client = OpenAI(
-        api_key=f'{get_api_key()}',
-        base_url='https://api.deepseek.com',
+        api_key=f"{get_api_key()}",
+        base_url=API_URL,
     )
     resp = client.chat.completions.create(
         model=MODEL,
@@ -141,8 +137,6 @@ def send_message(username, conv_id, user_input):
     if isinstance(raw_comandos, str):
         raw_comandos = [raw_comandos]
 
-    log_debug("Respuesta IA JSON:\n" + json.dumps(data, indent=2))
-
     # Ejecutar cada comando individualmente
     for cmd_str in raw_comandos:
         cmd = memory.process_memory_command(cmd_str)
@@ -159,3 +153,4 @@ def send_message(username, conv_id, user_input):
 
     history.add_message(conn, conv_id, 'assistant', answer)
     return answer, raw_comandos, reasoning
+
