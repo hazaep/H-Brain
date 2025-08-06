@@ -29,6 +29,12 @@ def init_history_db():
           timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           FOREIGN KEY(conv_id) REFERENCES conversations(id)
         );
+        CREATE TABLE IF NOT EXISTS message_embeddings (
+          message_id INTEGER PRIMARY KEY,
+          role TEXT NOT NULL,
+          embedding BLOB NOT NULL,
+          FOREIGN KEY(message_id) REFERENCES messages(id) ON DELETE CASCADE
+        );
         """)
     return conn
 

@@ -1,7 +1,6 @@
-import os, json, requests
+import os, json
 from openai import OpenAI
-from termux_backend.modules.modulo_clarai import history, memory
-# from termux_backend.modules.modulo_ai.ai_router - PENDIENTE
+from termux_backend.modules.modulo_clarai import history, memory, embedding_tools
 from termux_backend.modules.modulo_tools.utils import get_settings
 
 _cfg = get_settings()
@@ -13,20 +12,44 @@ CATS = CLARAI_CFG.get("memory_categories", ["proyectos", "usuario", "aprendizaje
 MAX_TOK = CLARAI_CFG.get("max_tokens", 20000)
 KEY_PATH = os.path.expanduser(CLARAI_CFG.get("ai_key_path", "configs/secrets/deepseek_key.txt"))
 ESPECIALIZACION = CLARAI_CFG.get("especializacion", "Exploración y teoria")
-# Obtener clave desde archivo
+EMBED_MODEL = CLARAI_CFG.get("embedding_model", "text-embedding-3-small")
+N_USER_SIMILAR = CLARAI_CFG.get("n_user_similar", 4)
+N_ASSISTANT_SIMILAR = CLARAI_CFG.get("n_assistant_similar", 2)
+N_MEMORY_SIMILAR = CLARAI_CFG.get("n_memory_similar", 4)
+
 def get_api_key():
     return open(os.path.expanduser(KEY_PATH)).read().strip()
 
-def build_system_prompt(username, memories, items, search_results=None):
+def build_system_prompt(username, memories, items, search_results=None, semantic_memories=None, semantic_msgs=None):
     lines = []
+    
+    # Memorias base por relevancia
     for m in memories:
         lines.append(f"- [{m[0]}] Mem: {m[1]} Cat: {m[2]} Relevancia: {m[3]}")
+    
+    # Resultados por búsqueda explícita (find:)
     if search_results:
         for m in search_results:
             lines.append(f"- [F:{m[0]}] Mem: {m[1]} Cat: {m[2]} Relevancia: {m[3]}")
+    
+    # Resultados semánticos por embedding
+    if semantic_memories:
+        for m in semantic_memories:
+            lines.append(f"- [S:{m[0]}] Mem: {m[1]} Cat: {m[2]} Relevancia: {m[3]}")
+
+    # Similares por historial semántico
+    msg_lines = []
+    if semantic_msgs:
+        for msg in semantic_msgs:
+            if msg["role"] == "user":
+                msg_lines.append(f"> Usuario dijo (sim={msg['sim']:.2f}): {msg['content']}")
+            elif msg["role"] == "assistant":
+                msg_lines.append(f"> Clarai respondió (sim={msg['sim']:.2f}): {msg['content']}")
+
     print("\n\n_____[CLARIUM]_____________________________")
-    for l in lines:
+    for l in lines and msg_lines:
         print(l)
+
     return f"""Eres Clarai, asistente de IA creada por Hazael. Usuario: {username}
 
 Especialización actual:
@@ -35,6 +58,9 @@ Especialización actual:
 Reglas:
 - Ajustar estilo según historial
 - Gestionar el historial relevante según tu criterio (puedes incluir múltiples comandos por respuesta)
+
+## CONTEXTO SEMÁNTICO RELEVANTE:
+{chr(10).join(msg_lines)}
 
 ## INSTRUCCIONES DE MEMORIA
 Evalúa cada interacción y decide si:
@@ -47,7 +73,7 @@ Criterios:
 1. Relevancia >7.0 para considerar almacenamiento (10.0 es crítico, 0.0 irrelevante)
 2. Categorías disponibles: {items}
 
-Comandos válidos (maximo 5, separados por coma [,]):
+Comandos válidos (máximo 5, separados por coma [,]):
 - add: Mem: [resumen] Cat: [categoría] Relevancia: [X.X]
 - del: [id]
 - rew: [id] Mem: [...] Cat: [...] Relevancia: [X.X]
@@ -72,21 +98,43 @@ def send_message(username, conv_id, user_input):
     # Guardar input del usuario
     history.add_message(conn, conv_id, 'user', user_input)
 
-    # Cargar historial y memorias relevantes
-    history_msgs = history.fetch_history(conn, conv_id)
-    top = memory.load_top_memories(mem_conn, user_id)
+    # Obtener embedding del input actual
+    input_emb = embedding_tools.generate_embedding(user_input)
+
+    # Buscar mensajes más similares por embedding
+    sim_msgs = embedding_tools.search_similar_message_embeddings(conn, input_emb, top_n=N_USER_SIMILAR + N_ASSISTANT_SIMILAR)
+    semantic_msgs = []
+    for sim, msg_id, role in sim_msgs:
+        if role not in ["user", "assistant"]:
+            continue
+        cur = conn.execute("SELECT content FROM messages WHERE id=? AND role=?", (msg_id, role))
+        row = cur.fetchone()
+        if row:
+            semantic_msgs.append({"role": role, "content": row[0], "sim": sim})
+
+    # Buscar memorias similares por embedding
+    sim_mems_raw = embedding_tools.search_similar_memory_embeddings(mem_conn, input_emb, top_n=N_MEMORY_SIMILAR)
+    semantic_mems = []
+    for sim, mem_id in sim_mems_raw:
+        row = memory.get_memory_by_id(mem_conn, mem_id)
+        if row:
+            semantic_mems.append((row[0], row[1], row[2], row[3]))  # id, summary, category, relevance
+
+    # Búsqueda por palabra clave (find:)
     search = []
     if user_input.lower().startswith("find:"):
-        kw = user_input.split(":",1)[1].strip()
+        kw = user_input.split(":", 1)[1].strip()
         search = memory.search_memories(mem_conn, user_id, kw)
 
-    # Preparar prompt
-    system = build_system_prompt(username, top, CATS, search)
-    messages = [{"role":"system","content":system}] + history_msgs
-    # Enviar a la API (o router)
-#    payload = {'model': MODEL, 'messages': messages, 'response_format': {'tipe': 'json_objet'}, 'temperature': TEMP, 'max_tokens': MAX_TOK}
-#    headers = {'Authorization': f'Bearer {get_api_key()}', 'Content-Type': 'application/json'}
-#    resp = requests.post(API_URL, headers=headers, json=payload)
+    # Cargar memorias top y mensajes de la conversación
+    top_mems = memory.load_top_memories(mem_conn, user_id)
+    history_msgs = history.fetch_history(conn, conv_id)
+
+    # Construir system prompt con memoria, contexto semántico, etc.
+    system = build_system_prompt(username, top_mems, CATS, search_results=search, semantic_memories=semantic_mems, semantic_msgs=semantic_msgs)
+    messages = [{"role": "system", "content": system}] + history_msgs
+
+    # Enviar a la API
     client = OpenAI(
         api_key=f"{get_api_key()}",
         base_url=API_URL,
@@ -95,30 +143,24 @@ def send_message(username, conv_id, user_input):
         model=MODEL,
         messages=messages,
         max_tokens=MAX_TOK,
-        response_format={
-            'type': 'json_object'
-        },
+        response_format={'type': 'json_object'},
         temperature=TEMP
     )
-#    if resp.error:
-#    if resp.status_code != 200:
-#        return f"[Error {resp.error}] {resp.text}"
+
     reasoning = resp.choices[0].message.reasoning_content
     content = resp.choices[0].message.content
 
-    # Soportar simulación con dict o respuesta real como str
+    # Procesar respuesta JSON
     if isinstance(content, dict):
         data = content
     elif isinstance(content, str):
         content = content.strip()
         if not content.startswith("{"):
             history.add_message(conn, conv_id, 'assistant', content)
-            raw_comandos = ""
-            return content, raw_comandos, reasoning
+            return content, "", reasoning
         try:
             data = json.loads(content)
         except json.JSONDecodeError:
-            # Intentar descomponer línea por línea si hay múltiples JSONs
             for line in content.strip().splitlines():
                 try:
                     data = json.loads(line)
@@ -132,12 +174,10 @@ def send_message(username, conv_id, user_input):
 
     answer = data.get("respuesta", "")
     raw_comandos = data.get("comando", [])
-
-    # Asegurar que raw_comandos sea lista
     if isinstance(raw_comandos, str):
         raw_comandos = [raw_comandos]
 
-    # Ejecutar cada comando individualmente
+    # Ejecutar comandos de memoria
     for cmd_str in raw_comandos:
         cmd = memory.process_memory_command(cmd_str)
         if not cmd:
@@ -149,8 +189,7 @@ def send_message(username, conv_id, user_input):
             memory.delete_memory(mem_conn, user_id, cmd["id"])
         elif action == "rew":
             memory.rewrite_memory(mem_conn, user_id, cmd["id"], cmd.get("summary"), cmd.get("category"), cmd.get("relevance"))
-        # find y esc no requieren ejecución directa
 
+    # Guardar respuesta
     history.add_message(conn, conv_id, 'assistant', answer)
     return answer, raw_comandos, reasoning
-

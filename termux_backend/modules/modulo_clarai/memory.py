@@ -21,7 +21,13 @@ def init_memory_db():
           timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           last_used TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
+        CREATE TABLE IF NOT EXISTS memory_embeddings (
+          memory_id INTEGER PRIMARY KEY,
+          embedding BLOB NOT NULL,
+          FOREIGN KEY(memory_id) REFERENCES memories(id) ON DELETE CASCADE
+        );
         """)
+
     return conn
 
 def load_top_memories(conn, user_id, limit=MAX):
